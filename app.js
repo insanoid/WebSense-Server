@@ -44,7 +44,7 @@ app.get('/web/nearby/:duration', web.trends);
 
 
 //Remove.
-app.post('/upload/app_data',appController.pushInfofunction);
+app.post('/upload/app_data',appController.pushAppInfo);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('WebSense Server Running: ' + app.get('port'));

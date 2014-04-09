@@ -35,7 +35,6 @@ console.log((validator.isEmail(req.param('username'))) +" "+ req.param('password
                 delete edit_user['_id'];
                 usersCollection.updateUserObject(user_id, edit_user, function (error, result) {
                     if (!error) {
-                        req.session.authkey = resp[1];
                         return res.json({
                             auth_token: resp[1]
                         });
