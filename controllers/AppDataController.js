@@ -11,9 +11,24 @@ var user = require('../controllers/UserController');
  * @return {HTTPRESPONSE} response.
  * @api public
  */
-exports.pushpInfo = function (req, res) {
+exports.pushAppInfo = function (req, res) {
 
 var data = req.body;
+user.validateSession(data.data.auth_token, function (user, error) {
+
+            if (user) {
+                    console.log(req.headers);
+					console.log("---%j",req.body);
+              	res.json({success:true});
+
+            } else {
+                res.statusCode = 500;
+                return res.json({
+                    error: "Invalid auth_token."
+                });
+            }
+
+        });
 
 var response = [{
 	"app_name":"App 1",
