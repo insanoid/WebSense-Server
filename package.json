@@ -13,6 +13,7 @@
 		"validator": "~3.5.0",
 		"socket.io": "latest",
 		"request": "latest",
-		"cheerio": "latest"
+		"cheerio": "latest",
+		"mongodb-incremental-mapreduce":"latest"
 	}
 }
