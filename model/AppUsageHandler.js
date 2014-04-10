@@ -86,4 +86,34 @@ AppUsageHandler.prototype.addAppRecord = function(_appInfo, callback) {
 		}
 	});
 };
+/**
+ * Fetches trends in app usage.
+ *
+ * @param {AppObject/Array} _appInfo
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.appTrends = function(callback) {
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.package_name, this.active_time)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query:{package_name: { $nin: [ "com.android.systemui", "com.google.android.googlequicksearchbox" ] }}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
 exports.AppUsageHandler = AppUsageHandler;

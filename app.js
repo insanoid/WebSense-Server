@@ -43,6 +43,9 @@ app.get('/web/trends/:duration', web.trends);
 app.get('/web/nearby/:duration', web.trends);
 
 
+app.get('/app/scrape/:appId', appController.getAppInfo);
+
+
 //Remove.
 app.post('/upload/app_data',appController.pushAppInfo);
 

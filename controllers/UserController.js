@@ -58,7 +58,7 @@ exports.authenticate = function(req, res) {
  */
 exports.create = function(req, res) {
 	console.log(req.param('password') + " " + req.param('uuid') + " " + req.param('username') + " " + req.param('gender') + req.param('job_type'));
-	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('gender') || !req.param('job_type')) {
+	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('gender') || !req.param('job_type')|| !req.param('uuid')) {
 		res.statusCode = 400;
 		return res.json({
 			error: 'Require a valid username, password, gender, job_type.'
@@ -66,7 +66,7 @@ exports.create = function(req, res) {
 	} else {
 		usersCollection.getUserForEmail(req.param('username'), function(error, user) {
 			if (user) {
-				res.statusCode = 400;
+				res.statusCode = 401;
 				return res.json({
 					error: 'Email already exists, try logging in!'
 				});
@@ -156,6 +156,7 @@ function generateAuthenticateToken(userObject, deviceId) {
 		newToken = device.auth_token;
 		userObject.device_info = [device];
 	}
+	console.log('- New Auth = %s',newToken);
 	return [userObject, newToken];
 }
 /**
