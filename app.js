@@ -42,12 +42,8 @@ app.post('/app/update', appController.pushAppInfo);
 app.get('/web/trends/:duration', web.trends);
 app.get('/web/nearby/:duration', web.trends);
 
-
+//private
 app.get('/app/scrape/:appId', appController.getAppInfo);
-
-
-//Remove.
-app.post('/upload/app_data',appController.pushAppInfo);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('WebSense Server Running: ' + app.get('port'));

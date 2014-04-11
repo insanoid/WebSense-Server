@@ -2,7 +2,9 @@ var config = require('../local.config');
 var validator = require('validator');
 var user = require('./UserController');
 var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
+var AppInfoHandler = require('../model/AppUsageHandler').AppInfoHandler;
 var appCollection = new AppUsageHandler(config.mongo.host, config.mongo.port);
+var appInfoCollection = new AppInfoHandler(config.mongo.host, config.mongo.port);
 var request = require('request');
 var cheerio = require('cheerio');
 /**
@@ -31,6 +33,13 @@ exports.pushAppInfo = function(req, res) {
 				}
 				appCollection.addAppRecord(data.app_info, function(error_info, result) {
 					if (!error_info) {
+						//Add to app datbase.
+						var appNames = []
+						for (var n in data.app_info) {
+							if (config.ignore_packages.indexOf(data.app_info[n].package_name) == -1) appNames.push(data.app_info[n].package_name);
+						}
+						updateAppInformationCollection(arrayUnique(appNames));
+						//Response send async
 						res.json({
 							success: true
 						});
@@ -59,12 +68,15 @@ exports.pushAppInfo = function(req, res) {
  */
 exports.trends = function(req, res) {
 	appCollection.appTrends(function(error_info, result) {
-		console.log(result);
-		if (!error_info) {
-			res.json({
-				success: true,
-				result: result
+		if (result) {
+			result.sort(function(a, b) {
+				return parseInt(b.value) - parseInt(a.value)
 			});
+		}
+		if (!error_info) {
+		associateValues(result,function(data){
+			res.json(data);
+		});
 		} else {
 			res.statusCode = 500;
 			return res.json({
@@ -72,27 +84,9 @@ exports.trends = function(req, res) {
 			});
 		}
 	});
-/*
-	var duration = req.param('duration');
-	var response = [{
-		"app_name": "App 1",
-		"package_name": "com.google.chrome",
-		"category": "Browser",
-		"app_icon": "http://54.186.15.10:3001/images/icon_app.png"
-	}, {
-		"app_name": "App 2",
-		"package_name": "com.google.chrome3",
-		"category": "Fun",
-		"app_icon": "http://54.186.15.10:3001/images/icon_app.png"
-	}, {
-		"app_name": "App 3",
-		"package_name": "com.google.chrome2",
-		"category": "Productivity",
-		"app_icon": "http://54.186.15.10:3001/images/icon_app.png"
-	}];
-	res.json(response);
-*/
 }
+
+
 /**
  * API Call - Shows the app usage trends for the area.
  *
@@ -123,12 +117,59 @@ exports.nearby = function(req, res) {
 	res.json(response);
 }
 exports.getAppInfo = function(req, res) {
-	url = 'https://play.google.com/store/apps/details?id=' + req.param('appId') + '&&hl=en';
-	console.log('URL %s', url);
+	findAndUpdateAppInfo(req.param('appId'), 
+
+	function(data) {
+		res.json({
+			info: data
+		});
+	});
+}
+
+
+/**
+ * Updates the db with the latest information.
+ *
+ * @param {Array} application array.
+ * @api private
+ */
+ 
+function updateAppInformationCollection(appArray) {
+	appInfoCollection.AppInformation(function(error_info, result) {
+		var refinedList = [];
+		for (var n in result) {
+			refinedList.push(result[n].package_name);
+		}
+				var newApps = [];
+		for (var index in appArray) {
+			if (refinedList.indexOf(appArray[index]) == -1) {
+				newApps.push(appArray[index]);
+			}
+		}
+		console.log("NEW %j", newApps);
+		if (newApps.length > 0) {
+			for (var i in newApps) {
+				findAndUpdateAppInfo(newApps[i], function(data) {
+				//cache update.
+				});
+			}
+		}
+	});
+}
+
+/**
+ * Scrapes google play store for more information..
+ *
+ * @param {Array} application array.
+ * @api private
+ */
+ 
+function findAndUpdateAppInfo(appPackageName, callback) {
+	url = 'https://play.google.com/store/apps/details?id=' + appPackageName + '&&hl=en';
 	var json = {
 		app_name: "",
-		package_name: req.param('appId'),
-		icon: "",
+		package_name: appPackageName,
+		icon: null,
 		category: "",
 		price: "",
 		developer_name: "",
@@ -173,7 +214,66 @@ exports.getAppInfo = function(req, res) {
 				var data = $(this);
 				json.developer_name = data.text().trim();
 			})
+			if (json.icon) {
+				callback(json);
+				appInfoCollection.appStoreInfo(json, function(error_info, result) {
+					callback(json);
+				});
+			} else {
+				if (response.statusCode != 404) {
+					callback(null);
+				} else {
+					callback(json);
+				}
+			}
+		} else {
+			callback(null);
 		}
-		res.json(json);
-	})
+	});
+}
+
+/**
+ * Helper function to remove duplocates from the array.
+ *
+ * @param {Array} application array.
+ * @api private
+ */
+ 
+function arrayUnique(a) {
+	return a.reduce(function(p, c) {
+		if (p.indexOf(c) < 0) p.push(c);
+		return p;
+	}, []);
+};
+
+
+/**
+ * helper function to associate the values of app trends and app information.
+ *
+ * @param {Array} application array.
+ * @api private
+ */
+function associateValues(appList,callback) {
+	if (appList.length > 100) 
+		appList = appList.slice(0, 100);
+	
+	var appPackageName = [];
+	for (var n in appList) {
+		appPackageName.push(appList[n]._id);
+	}
+	var response = [];
+	appInfoCollection.AppInformationFor(appPackageName, function(error_info, result) {
+		for(var trendIndex in appList){
+			for(var resultIndex in result){
+				if(appList[trendIndex]._id == result[resultIndex].package_name){
+				appList[trendIndex].app_name = result[resultIndex].app_name;
+				appList[trendIndex].category = result[resultIndex].category;
+				appList[trendIndex].app_icon = result[resultIndex].icon;
+				}
+			}
+		}
+		
+		callback(appList);
+	});
+	
 }
