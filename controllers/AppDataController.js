@@ -264,8 +264,12 @@ function associateValues(appList,callback) {
 	var response = [];
 	appInfoCollection.AppInformationFor(appPackageName, function(error_info, result) {
 		for(var trendIndex in appList){
+		
+			appList[trendIndex].package_name = appList[trendIndex]._id;
+			delete appList[trendIndex]['_id'];
+		
 			for(var resultIndex in result){
-				if(appList[trendIndex]._id == result[resultIndex].package_name){
+				if(appList[trendIndex].package_name == result[resultIndex].package_name){
 				appList[trendIndex].app_name = result[resultIndex].app_name;
 				appList[trendIndex].category = result[resultIndex].category;
 				appList[trendIndex].app_icon = result[resultIndex].icon;
