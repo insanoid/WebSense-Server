@@ -197,7 +197,7 @@ function findAndUpdateAppInfo(appPackageName, callback) {
 	request(url, function(error, response, html) {
 		if (!error) {
 			var $ = cheerio.load(html);
-			var title, release, rating;
+			
 			$('.cover-image').filter(function() {
 				var data = $(this);
 				if (!json.icon) json.icon = data.attr('src');
