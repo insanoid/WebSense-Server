@@ -7,36 +7,19 @@ var Server = require('mongodb').Server;
 var BSON = require('mongodb').BSON;
 var ObjectID = require('mongodb').ObjectID;
 var config = require('../local.config');
+var db = null;
+
 /**
  * Creates a collection object for the user.
  *
- * @param {String} host
- * @param {String} port
+ * @param {dbobject} Database connection.
  * @return {Collection} UserCollection.
  * @api public
  */
-UsersCollection = function(host, port) {
-	this.db = new Db(config.mongo.db, new Server(host, port, {
-		auto_reconnect: true
-	}, {}), {
-		safe: true
-	});
-	this.db.open(function(err, data) {
-		if (data) {
-			if (config.mongo.username && config.mongo.password) {
-				data.authenticate(config.mongo.username, config.mongo.password, function(errdb, datadb) {
-					if (datadb) {
-						console.log("Database connection opened.");
-					} else {
-						console.log("Error in connecting to database: " + errdb);
-					}
-				});
-			} else {}
-		} else {
-			console.log(err);
-		}
-	});
+UsersCollection = function(_dbConn) {
+	this.db = _dbConn;
 };
+
 /**
  * Creates a collection object for the user.
  *
@@ -45,7 +28,7 @@ UsersCollection = function(host, port) {
  * @api public
  */
 UsersCollection.prototype.getCollection = function(callback) {
-	this.db.collection(config.mongo.db, function(error, usercollection) {
+	this.db.collection(config.mongo.collection.user, function(error, usercollection) {
 		if (error) callback(error);
 		else callback(null, usercollection);
 	});

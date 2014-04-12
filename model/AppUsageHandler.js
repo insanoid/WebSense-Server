@@ -10,32 +10,12 @@ var config = require('../local.config');
 /**
  * Creates an access point
  *
- * @param {String} host
- * @param {String} port
+ * @param {DBConnection} Database connection
  * @return {Object} handler object.
  * @api public
  */
-AppUsageHandler = function(host, port) {
-	this.db = new Db(config.mongo.app_usage, new Server(host, port, {
-		auto_reconnect: true
-	}, {}), {
-		safe: true
-	});
-	this.db.open(function(err, data) {
-		if (data) {
-			if (config.mongo.username && config.mongo.password) {
-				data.authenticate(config.mongo.username, config.mongo.password, function(errdb, datadb) {
-					if (datadb) {
-						console.log("Database connection opened.");
-					} else {
-						console.log("Error in connecting to database: " + errdb);
-					}
-				});
-			} else {}
-		} else {
-			console.log(err);
-		}
-	});
+AppUsageHandler = function(_dbConn) {
+	this.db = _dbConn;
 };
 
 
@@ -43,32 +23,12 @@ AppUsageHandler = function(host, port) {
 /**
  * Creates an access point for handling generic app information.
  *
- * @param {String} host
- * @param {String} port
+ * @param {DBConnection} Database connection
  * @return {Object} handler object.
  * @api public
  */
-AppInfoHandler = function(host, port) {
-	this.db = new Db(config.mongo.app_info, new Server(host, port, {
-		auto_reconnect: true
-	}, {}), {
-		safe: true
-	});
-	this.db.open(function(err, data) {
-		if (data) {
-			if (config.mongo.username && config.mongo.password) {
-				data.authenticate(config.mongo.username, config.mongo.password, function(errdb, datadb) {
-					if (datadb) {
-						console.log("Database connection opened.");
-					} else {
-						console.log("Error in connecting to database: " + errdb);
-					}
-				});
-			} else {}
-		} else {
-			console.log(err);
-		}
-	});
+AppInfoHandler= function(_dbConn) {
+	this.db = _dbConn;
 };
 
 
@@ -80,7 +40,7 @@ AppInfoHandler = function(host, port) {
  * @api public
  */
 AppUsageHandler.prototype.getCollection = function(callback) {
-	this.db.collection(config.mongo.app_usage, function(error, usercollection) {
+	this.db.collection(config.mongo.collection.app_usage, function(error, usercollection) {
 		if (error) callback(error);
 		else callback(null, usercollection);
 	});
@@ -96,7 +56,7 @@ AppUsageHandler.prototype.getCollection = function(callback) {
  * @api public
  */
 AppInfoHandler.prototype.getCollection = function(callback) {
-	this.db.collection(config.mongo.app_info, function(error, appCollection) {
+	this.db.collection(config.mongo.collection.app_info, function(error, appCollection) {
 		if (error) callback(error);
 		else callback(null, appCollection);
 	});

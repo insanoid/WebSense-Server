@@ -1,7 +1,11 @@
 var config = require('../local.config');
 var validator = require('validator');
 var UsersCollection = require('../model/UserHandler').UsersCollection;
-var usersCollection = new UsersCollection(config.mongo.host, config.mongo.port);
+var dbObject = null;
+var usersCollection = null; //new UsersCollection(config.mongo.host, config.mongo.port);
+
+
+
 /**
  * API Call - Shows the app usage trends.
  *

@@ -1,12 +1,28 @@
 var config = require('../local.config');
 var validator = require('validator');
 var user = require('./UserController');
-var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
-var AppInfoHandler = require('../model/AppUsageHandler').AppInfoHandler;
-var appCollection = new AppUsageHandler(config.mongo.host, config.mongo.port);
-var appInfoCollection = new AppInfoHandler(config.mongo.host, config.mongo.port);
 var request = require('request');
 var cheerio = require('cheerio');
+
+var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
+var AppInfoHandler = require('../model/AppUsageHandler').AppInfoHandler;
+
+var appCollection = null;//new AppUsageHandler(config.mongo.host, config.mongo.port);
+var appInfoCollection = null;//new AppInfoHandler(config.mongo.host, config.mongo.port);
+
+
+
+/**
+ * Initialize the db connection.
+ *
+ * @param {DBConnection} already connected db connection.
+ * @api public
+ */
+exports.initDBConnection = function(_dbConn){
+	appCollection = new AppUsageHandler(_dbConn);
+	appInfoCollection = new AppInfoHandler(_dbConn);
+}
+
 /**
  * API Call - Shows the app usage trends for the area.
  *
@@ -44,7 +60,8 @@ exports.pushAppInfo = function(req, res) {
 							success: true
 						});
 					} else {
-						res.statusCode = 500;
+						console.log("-- %s",error_info);
+						res.statusCode = 501;
 						return res.json({
 							error: "Invalid request."
 						});
@@ -52,6 +69,7 @@ exports.pushAppInfo = function(req, res) {
 				});
 			} else {
 				res.statusCode = 500;
+				console.log("-- %s",error,user);
 				return res.json({
 					error: "Invalid auth_token."
 				});

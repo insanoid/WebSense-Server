@@ -1,7 +1,20 @@
 var config = require('../local.config');
 var validator = require('validator');
 var UsersCollection = require('../model/UserHandler').UsersCollection;
-var usersCollection = new UsersCollection(config.mongo.host, config.mongo.port);
+var usersCollection = null;
+
+
+/**
+ * Initialize the db connection.
+ *
+ * @param {DBConnection} already connected db connection.
+ * @api public
+ */
+exports.initDBConnection = function(_dbConn){
+	usersCollection = new UsersCollection(_dbConn);
+}
+
+
 /**
  * API Call - Authenticates the user.
  *
@@ -58,7 +71,7 @@ exports.authenticate = function(req, res) {
  */
 exports.create = function(req, res) {
 	console.log(req.param('password') + " " + req.param('uuid') + " " + req.param('username') + " " + req.param('gender') + req.param('job_type'));
-	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('gender') || !req.param('job_type')|| !req.param('uuid')) {
+	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('gender') || !req.param('job_type') || !req.param('uuid')) {
 		res.statusCode = 400;
 		return res.json({
 			error: 'Require a valid username, password, gender, job_type.'
@@ -156,7 +169,7 @@ function generateAuthenticateToken(userObject, deviceId) {
 		newToken = device.auth_token;
 		userObject.device_info = [device];
 	}
-	console.log('- New Auth = %s',newToken);
+	console.log('- New Auth = %s', newToken);
 	return [userObject, newToken];
 }
 /**
@@ -173,6 +186,7 @@ function createNewDevice(deviceId) {
 		uuid: deviceId,
 		last_logged_at: new Date()
 	}
+	console.log('- New Auth = %s', device.auth_token);
 	return device;
 }
 /**
