@@ -18,6 +18,7 @@ databaseconnection.connect(config.mongo.host, config.mongo.port, function(_dbCon
 
 	user.initDBConnection(_dbConn);
 	appController.initDBConnection(_dbConn);
+	web.initDBConnection(_dbConn);
 
 });
 
