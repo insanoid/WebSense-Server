@@ -11,8 +11,11 @@ config.mongo.host = 'localhost';
 config.mongo.port = 27017;
 // config.mongo.username = 'someusername';
 // config.mongo.password = 'somepassword';
-config.mongo.db = 'websense';
-config.mongo.app_usage = 'websenseAppUsage';
+config.mongo.db = 'websensedb';
+config.mongo.pool_size = 10;
+config.mongo.collection.user = 'users';
+config.mongo.collection.app_usage = 'appusage';
+config.mongo.collection.app_info = 'appinfo';
 
 config.web.port = process.env.PORT || 3000;
 module.exports = config;

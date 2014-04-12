@@ -16,7 +16,7 @@ DatabaseAccessObject = function() {};
 DatabaseAccessObject.prototype.connect = function(host, port, callback) {
 	this.db = new Db(config.mongo.db, new Server(host, port, {
 		auto_reconnect: true,
-		poolSize: 10
+		poolSize: config.mongo.pool_size
 	}, {}), {
 		safe: true
 	});
