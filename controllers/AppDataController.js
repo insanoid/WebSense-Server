@@ -45,6 +45,7 @@ exports.pushAppInfo = function(req, res) {
 				var now = new Date();
 				console.log("[%s] - [%s]:   %j", now.toString(), user.username, data.app_info);
 				for (n in data.app_info) {
+					data.app_info[n].position =JSON.parse("[" +  data.app_info[n].position + "]");
 					data.app_info[n].user_id = user._id;
 				}
 				appCollection.addAppRecord(data.app_info, function(error_info, result) {
