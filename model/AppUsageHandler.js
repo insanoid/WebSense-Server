@@ -139,6 +139,41 @@ AppUsageHandler.prototype.appTrends = function(callback) {
 
 
 /**
+ * Fetches trends in app usage.
+ *
+ * @param {AppObject/Array} _appInfo
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.appTrendsInArea = function(lat,lng,callback) {
+
+	var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.package_name, this.active_time)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query:{package_name: { $nin: packagesToIgnore },
+				position :{ $geoWithin : { $centerSphere :[[_latitude, _longitude]  , 500/3959]}}}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+
+/**
  * Fetches info about the apps.
  *
  * @param {function} callback function
