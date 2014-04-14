@@ -313,7 +313,7 @@ function arrayUnique(a) {
  * @api private
  */
 function associateValues(appList, callback) {
-	if (appList.length > 100) appList = appList.slice(0, 100);
+
 	var appPackageName = [];
 	for (var n in appList) {
 		appPackageName.push(appList[n]._id);
