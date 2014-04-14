@@ -7,6 +7,7 @@ var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
 var AppInfoHandler = require('../model/AppUsageHandler').AppInfoHandler;
 var appCollection = null;
 var appInfoCollection = null;
+
 /**
  * Initialize the db connection.
  *
@@ -17,6 +18,7 @@ exports.initDBConnection = function(_dbConn) {
 	appCollection = new AppUsageHandler(_dbConn);
 	appInfoCollection = new AppInfoHandler(_dbConn);
 }
+
 /**
  * API Call - Shows the app usage trends for the area.
  *
@@ -72,6 +74,7 @@ exports.pushAppInfo = function(req, res) {
 		});
 	}
 }
+
 /**
  * API Call - Shows the app usage trends.
  *
@@ -129,6 +132,7 @@ exports.trends = function(req, res) {
 		}
 	});
 }
+
 /**
  * API Call - Shows the app usage trends for the area.
  *
@@ -172,6 +176,7 @@ exports.nearby = function(req, res) {
 		});
 	}
 }
+
 /**
  * Get application information for the ID.
  *
@@ -185,13 +190,13 @@ exports.getAppInfo = function(req, res) {
 		});
 	});
 }
+
 /**
  * Updates the db with the latest information.
  *
  * @param {Array} application array.
  * @api private
  */
-
 function updateAppInformationCollection(appArray) {
 	appInfoCollection.AppInformation(function(error_info, result) {
 		var refinedList = [];
@@ -214,13 +219,13 @@ function updateAppInformationCollection(appArray) {
 		}
 	});
 }
+
 /**
  * Scrapes google play store for more information..
  *
  * @param {Array} application array.
  * @api private
  */
-
 function findAndUpdateAppInfo(appPackageName, callback) {
 	url = 'https://play.google.com/store/apps/details?id=' + appPackageName + '&&hl=en';
 	var json = {
@@ -287,26 +292,26 @@ function findAndUpdateAppInfo(appPackageName, callback) {
 		}
 	});
 }
+
 /**
  * Helper function to remove duplocates from the array.
  *
  * @param {Array} application array.
  * @api private
  */
-
 function arrayUnique(a) {
 	return a.reduce(function(p, c) {
 		if (p.indexOf(c) < 0) p.push(c);
 		return p;
 	}, []);
 }
+
 /**
  * helper function to associate the values of app trends and app information.
  *
  * @param {Array} application array.
  * @api private
  */
-
 function associateValues(appList, callback) {
 	if (appList.length > 100) appList = appList.slice(0, 100);
 	var appPackageName = [];
@@ -329,13 +334,13 @@ function associateValues(appList, callback) {
 		callback(appList);
 	});
 }
+
 /**
  * Cleans the URL by removing trailing splaces, backslashes and hash.
  *
  * @param {String} URL.
  * @api private
  */
-
 function cleanURLString(str) {
 	str = str.trim();
 	if (str.substr(-1) == '/' || str.substr(-1) == '#') {
@@ -343,6 +348,7 @@ function cleanURLString(str) {
 	}
 	return str;
 }
+
 /**
  * handles token validation.
  *
@@ -350,7 +356,6 @@ function cleanURLString(str) {
  * @return {Boolean} if valid user or not
  * @api private
  */
-
 function tokenValidator(token, callback) {
 	
 	if (token) {
