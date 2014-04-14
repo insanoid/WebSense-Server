@@ -4,7 +4,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 var uriparser = require('url');
 var WebUsageHandler = require('../model/WebUsageHandler').WebUsageHandler;
-var webCollection = null; //new UsersCollection(config.mongo.host, config.mongo.port);
+var webCollection = null;
 /**
  * Initialize the db connection.
  *
@@ -24,23 +24,19 @@ exports.initDBConnection = function(_dbConn) {
 exports.trends = function(req, res) {
 	webCollection.webTrends(function(error_info, result) {
 		console.log('-' + error_info + result);
-
-res.json({
+		res.json({
 			results: result
 		});
-
 	});
- 
- 	//var duration = req.param('duration');//'http://www.wired.co.uk/news/archive/2014-04/11/ebola-open-street-map'; //req.param('duration');
-	/*
+	//var duration = req.param('duration');//'http://www.wired.co.uk/news/archive/2014-04/11/ebola-open-street-map'; //req.param('duration');
+/*
 findAndUpdateAppInfo(duration, function(data) {
 		res.json(data);
 	});
 */
-	
 };
 /**
- * Scrapes google play store for more information..
+ * Scrapes the URL for more information..
  *
  * @param {Array} application array.
  * @api private
@@ -70,14 +66,13 @@ function findAndUpdateAppInfo(urlcur, callback) {
 			$('img[src$=jpg],img[src$=png]').filter(function() {
 				var data = $(this);
 				console.log('here' + data.attr('src'));
-				//"http://"+host+
 				var url = "";
 				if (ValidURL(data.attr('src')) == true) {
 					url = data.attr('src');
 				} else {
 					url = "http://" + host + data.attr('src');
 				}
-				url = replaceAll(' ', '%20',url);
+				url = replaceAll(' ', '%20', url);
 				json.content_image.push(url);
 			})
 			callback(json);

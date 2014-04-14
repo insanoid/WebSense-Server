@@ -41,11 +41,14 @@ if ('development' == app.get('env')) {
 app.get('/', routes.index);
 app.post('/user/create', user.create);
 app.post('/user/authenticate', user.authenticate);
+
 app.get('/app/trends/:duration', appController.trends);
 app.get('/app/nearby/:duration', appController.nearby);
+
 app.post('/app/update', appController.pushAppInfo);
 app.get('/web/trends/:duration', web.trends);
 app.get('/web/nearby/:duration', web.trends);
+
 //private
 app.get('/app/scrape/:appId', appController.getAppInfo);
 http.createServer(app).listen(app.get('port'), function() {

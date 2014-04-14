@@ -20,7 +20,6 @@ WebUsageHandler = function(_dbConn) {
 	this.db = _dbConn;
 };
 
-
 /**
  * Creates an access point
  *
@@ -31,6 +30,7 @@ WebUsageHandler = function(_dbConn) {
 WebStorageHandler = function(_dbConn) {
 	this.db = _dbConn;
 };
+
 /**
  * Creates a collection object for the web usage.
  *
@@ -45,7 +45,6 @@ WebUsageHandler.prototype.getCollection = function(callback) {
 	});
 };
 
-
 /**
  * Creates a collection object for the web scraped.
  *
@@ -59,10 +58,6 @@ WebStorageHandler.prototype.getCollection = function(callback) {
 		else callback(null, usercollection);
 	});
 };
-
-
-
-
 
 /**
  * fetches a collection of web usage.
@@ -82,7 +77,6 @@ WebUsageHandler.prototype.findAll = function(callback) {
 		}
 	});
 };
-
 
 /**
  * Fetches trends in app usage.
@@ -117,7 +111,6 @@ WebUsageHandler.prototype.webTrends = function(callback) {
 	});
 };
 
-
 /**
  * Fetches info about the apps (for the given set).
  *
@@ -138,8 +131,6 @@ WebStorageHandler.prototype.scrapedInforFor = function(urlList, callback) {
 	});
 };
 
-
-
 /**
  * Push info about the apps.
  *
@@ -158,8 +149,6 @@ WebStorageHandler.prototype.webStoreInfo = function(WebInfo, callback) {
 		}
 	});
 };
-
-
 
 
 exports.WebUsageHandler = WebUsageHandler;

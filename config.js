@@ -7,6 +7,7 @@ config.mongo = {};
 config.web = {};
 config.push = {};
 
+config.max_trends_result = 15;
 config.mongo.host = 'localhost';
 config.mongo.port = 27017;
 // config.mongo.username = 'someusername';

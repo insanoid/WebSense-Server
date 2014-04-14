@@ -7,6 +7,7 @@ var Server = require('mongodb').Server;
 var BSON = require('mongodb').BSON;
 var ObjectID = require('mongodb').ObjectID;
 var config = require('../local.config');
+
 /**
  * Creates an access point
  *
@@ -18,8 +19,6 @@ AppUsageHandler = function(_dbConn) {
 	this.db = _dbConn;
 };
 
-
-
 /**
  * Creates an access point for handling generic app information.
  *
@@ -30,7 +29,6 @@ AppUsageHandler = function(_dbConn) {
 AppInfoHandler= function(_dbConn) {
 	this.db = _dbConn;
 };
-
 
 /**
  * Creates a collection object for the app usage.
@@ -46,8 +44,6 @@ AppUsageHandler.prototype.getCollection = function(callback) {
 	});
 };
 
-
-
 /**
  * Creates a collection object for the app info collection.
  *
@@ -62,7 +58,6 @@ AppInfoHandler.prototype.getCollection = function(callback) {
 	});
 };
 
-
 /**
  * fetches a collection of app usage.
  *
@@ -70,18 +65,17 @@ AppInfoHandler.prototype.getCollection = function(callback) {
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-UsersCollection.prototype.findAll = function(callback) {
-	this.getCollection(function(error, usercollection) {
+AppUsageHandler.prototype.findAll = function(callback) {
+	this.getCollection(function(error, appcollection) {
 		if (error) callback(error)
 		else {
-			usercollection.find().toArray(function(error, results) {
-				if (error) callback(error)
+			appcollection.find().toArray(function(error_correction, results) {
+				if (error_correction) callback(error_correction)
 				else callback(null, results)
 			});
 		}
 	});
 };
-
 
 /**
  * Creates a new appInfo [can be single or multiple]
@@ -102,8 +96,6 @@ AppUsageHandler.prototype.addAppRecord = function(_appInfo, callback) {
 	});
 };
 
-
-
 /**
  * Fetches trends in app usage.
  *
@@ -111,41 +103,7 @@ AppUsageHandler.prototype.addAppRecord = function(_appInfo, callback) {
  * @param {function} callback function
  * @api public
  */
-AppUsageHandler.prototype.appTrends = function(callback) {
-
-	var packagesToIgnore = config.ignore_packages;
-	this.getCollection(function(error, appcollection) {
-		if (error) callback(error)
-		else {
-			var map = function() {
-					emit(this.package_name, this.active_time)
-				};
-			var reduce = function(key, values) {
-					return Array.sum(values);
-				};
-			appcollection.mapReduce(map, reduce, {
-				out: {
-					inline: 1
-				},
-				query:{package_name: { $nin: packagesToIgnore }}
-			}, function(error, result) {
-				console.log('- %s', error);
-				if (error) callback(error)
-				else callback(null, result)
-			});
-		}
-	});
-};
-
-
-/**
- * Fetches trends in app usage.
- *
- * @param {AppObject/Array} _appInfo
- * @param {function} callback function
- * @api public
- */
-AppUsageHandler.prototype.appTrendsInArea = function(lat,lng,callback) {
+AppUsageHandler.prototype.appTrends = function(duration, callback) {
 
 	var packagesToIgnore = config.ignore_packages;
 	this.getCollection(function(error, appcollection) {
@@ -162,7 +120,41 @@ AppUsageHandler.prototype.appTrendsInArea = function(lat,lng,callback) {
 					inline: 1
 				},
 				query:{package_name: { $nin: packagesToIgnore },
-				position :{ $geoWithin : { $centerSphere :[[_latitude, _longitude]  , 500/3959]}}}
+				start_time:{$gt: duration}}
+			}, function(error, result) {
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+/**
+ * Fetches trends in app usage.
+ *
+ * @param {AppObject/Array} _appInfo
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude,_longitude,callback) {
+
+	var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.package_name, this.active_time)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query:{package_name: { $nin: packagesToIgnore },
+				start_time:{$gte: duration},
+				position :{ $geoWithin : { $centerSphere :[[_latitude, _longitude], config.max_trends_result/3959]}}}
 			}, function(error, result) {
 				console.log('- %s', error);
 				if (error) callback(error)
@@ -171,7 +163,6 @@ AppUsageHandler.prototype.appTrendsInArea = function(lat,lng,callback) {
 		}
 	});
 };
-
 
 /**
  * Fetches info about the apps.
@@ -192,7 +183,6 @@ AppInfoHandler.prototype.AppInformation = function(callback) {
 	});
 };
 
-
 /**
  * Fetches info about the apps (for the given set).
  *
@@ -205,15 +195,13 @@ AppInfoHandler.prototype.AppInformationFor = function(appList, callback) {
 	this.getCollection(function(error, appcollection) {
 		if (error) callback(error)
 		else {
-			appcollection.find({package_name:{$in:appList}}).toArray(function(error, results) {
+			appcollection.find({package_name:{$in:appList, $exists:true}}).toArray(function(error, results) {
 				if (error) callback(error)
 				else callback(null, results)
 			});
 		}
 	});
 };
-
-
 
 /**
  * Push info about the apps.
@@ -233,9 +221,6 @@ AppInfoHandler.prototype.appStoreInfo = function(appInfo, callback) {
 		}
 	});
 };
-
-
-
 
 exports.AppInfoHandler = AppInfoHandler;
 exports.AppUsageHandler = AppUsageHandler;
