@@ -125,23 +125,7 @@ exports.nearby = function(req, res) {
 		}
 	});
 }
-/**
- * API Call - Scrapes web info.
- *
- * @param {String} url
- * @return {HTTPRESPONSE} response.
- * @api public
- */
-exports.lookup = function(req, res) {
-	webCollection.webTrends(function(error_info, result) {
-		updateWebSiteInformationCollection([req.param('url')]);
-		processURLRequest(result, function(data) {
-			res.json({
-				results: data
-			});
-		});
-	});
-}
+
 /**
  * Updates the db with the latest information.
  *
