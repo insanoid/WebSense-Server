@@ -48,8 +48,8 @@ app.get('/app/nearby/:duration', appController.nearby);
 
 app.post('/app/update', appController.pushAppInfo);
 app.get('/web/trends/:duration', web.trends);
-app.get('/web/nearby/:duration', web.trends);
-
+app.get('/web/nearby/:duration', web.nearby);
+app.get('/web/lookup', web.lookup);
 //private
 app.get('/app/scrape/:appId', appController.getAppInfo);
 http.createServer(app).listen(app.get('port'), function() {

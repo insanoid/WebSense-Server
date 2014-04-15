@@ -1,6 +1,8 @@
 var config = require('../local.config');
 var validator = require('validator');
 var user = require('./UserController');
+var webData = require('./WebDataController');
+
 var request = require('request');
 var cheerio = require('cheerio');
 var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
@@ -17,6 +19,7 @@ var appInfoCollection = null;
 exports.initDBConnection = function(_dbConn) {
 	appCollection = new AppUsageHandler(_dbConn);
 	appInfoCollection = new AppInfoHandler(_dbConn);
+	
 }
 
 /**
@@ -48,11 +51,18 @@ exports.pushAppInfo = function(req, res) {
 				appCollection.addAppRecord(data.app_info, function(error_info, result) {
 					if (!error_info) {
 						//Add to app datbase.
-						var appNames = []
+						var appNames = [];
+						var newURLs = [];
 						for (var n in data.app_info) {
 							if (config.ignore_packages.indexOf(data.app_info[n].package_name) == -1) appNames.push(data.app_info[n].package_name);
+							if(webData.ValidURL(data.app_info[n].associated_url)==true){
+								newURLs.push(data.app_info[n].associated_url);
+							}
 						}
-						updateAppInformationCollection(arrayUnique(appNames));
+						if(newURLs.length)
+							webData.updateWebSiteInformationCollection(arrayUnique(newURLs));
+						if(appNames.length)
+							updateAppInformationCollection(arrayUnique(appNames));
 						//Response send async
 						res.json({
 							success: true
