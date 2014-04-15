@@ -42,10 +42,11 @@ exports.trends = function(req, res) {
 				if (timeperiod > 1) {
 					webCollection.webTrends(req.param('duration'), function(error_info, result) {
 						if (result) {
-							if (result.length > limit) result = result.slice(0, limit);
+							
 							result.sort(function(a, b) {
 								return parseInt(b.value) - parseInt(a.value)
 							});
+							if (result.length > limit) result = result.slice(0, limit);
 						}
 						if (!error_info) {
 							associateURLRequests(result, function(data) {
@@ -95,10 +96,11 @@ exports.nearby = function(req, res) {
 			if (!(90 > lng && lng < -90) || !(180 > lat && lat < -180) || timeperiod < 1) {
 				webCollection.webTrendsInArea(req.param('duration'), lat, lng, function(error_info, result) {
 					if (result) {
-						if (result.length > limit) result = result.slice(0, limit);
+					
 						result.sort(function(a, b) {
 							return parseInt(b.value) - parseInt(a.value)
 						});
+						if (result.length > limit) result = result.slice(0, limit);
 					}
 					if (!error_info) {
 						associateURLRequests(result, function(data) {
