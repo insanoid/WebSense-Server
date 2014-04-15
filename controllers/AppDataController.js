@@ -2,14 +2,12 @@ var config = require('../local.config');
 var validator = require('validator');
 var user = require('./UserController');
 var webData = require('./WebDataController');
-
 var request = require('request');
 var cheerio = require('cheerio');
 var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
 var AppInfoHandler = require('../model/AppUsageHandler').AppInfoHandler;
 var appCollection = null;
 var appInfoCollection = null;
-
 /**
  * Initialize the db connection.
  *
@@ -19,9 +17,7 @@ var appInfoCollection = null;
 exports.initDBConnection = function(_dbConn) {
 	appCollection = new AppUsageHandler(_dbConn);
 	appInfoCollection = new AppInfoHandler(_dbConn);
-	
 }
-
 /**
  * API Call - Shows the app usage trends for the area.
  *
@@ -55,14 +51,12 @@ exports.pushAppInfo = function(req, res) {
 						var newURLs = [];
 						for (var n in data.app_info) {
 							if (config.ignore_packages.indexOf(data.app_info[n].package_name) == -1) appNames.push(data.app_info[n].package_name);
-							if(webData.ValidURL(data.app_info[n].associated_url)==true){
+							if (webData.ValidURL(data.app_info[n].associated_url) == true) {
 								newURLs.push(data.app_info[n].associated_url);
 							}
 						}
-						if(newURLs.length)
-							webData.updateWebSiteInformationCollection(arrayUnique(newURLs));
-						if(appNames.length)
-							updateAppInformationCollection(arrayUnique(appNames));
+						if (newURLs.length) webData.updateWebSiteInformationCollection(arrayUnique(newURLs));
+						if (appNames.length) updateAppInformationCollection(arrayUnique(appNames));
 						//Response send async
 						res.json({
 							success: true
@@ -84,7 +78,6 @@ exports.pushAppInfo = function(req, res) {
 		});
 	}
 }
-
 /**
  * API Call - Shows the app usage trends.
  *
@@ -101,13 +94,11 @@ exports.trends = function(req, res) {
 					"error": "requires a time parameter."
 				});
 			} else {
-				
 				var timeperiod = parseInt(req.param('duration'));
 				var limit = config.max_trends_result;
 				if (req.param('limit')) {
 					if (parseInt(req.param('limit')) > 0) limit = parseInt(req.param('limit'));
 				}
-				
 				if (timeperiod > 1) {
 					appCollection.appTrends(req.param('duration'), function(error_info, result) {
 						if (result) {
@@ -142,7 +133,6 @@ exports.trends = function(req, res) {
 		}
 	});
 }
-
 /**
  * API Call - Shows the app usage trends for the area.
  *
@@ -153,40 +143,48 @@ exports.trends = function(req, res) {
  * @api public
  */
 exports.nearby = function(req, res) {
-	var lat = parseFloat(req.param('lat'));
-	var lng = parseFloat(req.param('lng'));
-	var limit = config.max_trends_result;
-	if (req.param('limit')) {
-		if (parseInt(req.param('limit')) > 0) limit = parseInt(req.param('limit'));
-	}
-	var timeperiod = parseInt(req.param('duration'));
-	if (!(90 > lng && lng < -90) || !(180 > lat && lat < -180) || timeperiod < 1) {
-		appCollection.appTrendsInArea(req.param('duration'), lat, lng, function(error_info, result) {
-			if (result) {
-				if (result.length > limit) result = result.slice(0, limit);
-				result.sort(function(a, b) {
-					return parseInt(b.value) - parseInt(a.value)
-				});
+	tokenValidator(req.param('auth_token'), function(valid) {
+		if (valid == true) {
+			var lat = parseFloat(req.param('lat'));
+			var lng = parseFloat(req.param('lng'));
+			var limit = config.max_trends_result;
+			if (req.param('limit')) {
+				if (parseInt(req.param('limit')) > 0) limit = parseInt(req.param('limit'));
 			}
-			if (!error_info) {
-				associateValues(result, function(data) {
-					res.json(data);
+			var timeperiod = parseInt(req.param('duration'));
+			if (!(90 > lng && lng < -90) || !(180 > lat && lat < -180) || timeperiod < 1) {
+				appCollection.appTrendsInArea(req.param('duration'), lat, lng, function(error_info, result) {
+					if (result) {
+						if (result.length > limit) result = result.slice(0, limit);
+						result.sort(function(a, b) {
+							return parseInt(b.value) - parseInt(a.value)
+						});
+					}
+					if (!error_info) {
+						associateValues(result, function(data) {
+							res.json(data);
+						});
+					} else {
+						res.statusCode = 500;
+						return res.json({
+							error: "Invalid request."
+						});
+					}
 				});
 			} else {
-				res.statusCode = 500;
+				res.statusCode = 400;
 				return res.json({
-					error: "Invalid request."
+					error: "Invalid coordinates."
 				});
 			}
-		});
-	} else {
-		res.statusCode = 400;
-		return res.json({
-			error: "Invalid coordinates."
-		});
-	}
+		} else {
+			res.statusCode = 500;
+			return res.json({
+				error: "Invalid auth_token."
+			});
+		}
+	});
 }
-
 /**
  * Get application information for the ID.
  *
@@ -200,13 +198,13 @@ exports.getAppInfo = function(req, res) {
 		});
 	});
 }
-
 /**
  * Updates the db with the latest information.
  *
  * @param {Array} application array.
  * @api private
  */
+
 function updateAppInformationCollection(appArray) {
 	appInfoCollection.AppInformation(function(error_info, result) {
 		var refinedList = [];
@@ -229,13 +227,13 @@ function updateAppInformationCollection(appArray) {
 		}
 	});
 }
-
 /**
  * Scrapes google play store for more information..
  *
  * @param {Array} application array.
  * @api private
  */
+
 function findAndUpdateAppInfo(appPackageName, callback) {
 	url = 'https://play.google.com/store/apps/details?id=' + appPackageName + '&&hl=en';
 	var json = {
@@ -302,28 +300,27 @@ function findAndUpdateAppInfo(appPackageName, callback) {
 		}
 	});
 }
-
 /**
  * Helper function to remove duplocates from the array.
  *
  * @param {Array} application array.
  * @api private
  */
+
 function arrayUnique(a) {
 	return a.reduce(function(p, c) {
 		if (p.indexOf(c) < 0) p.push(c);
 		return p;
 	}, []);
 }
-
 /**
  * helper function to associate the values of app trends and app information.
  *
  * @param {Array} application array.
  * @api private
  */
-function associateValues(appList, callback) {
 
+function associateValues(appList, callback) {
 	var appPackageName = [];
 	for (var n in appList) {
 		appPackageName.push(appList[n]._id);
@@ -344,13 +341,13 @@ function associateValues(appList, callback) {
 		callback(appList);
 	});
 }
-
 /**
  * Cleans the URL by removing trailing splaces, backslashes and hash.
  *
  * @param {String} URL.
  * @api private
  */
+
 function cleanURLString(str) {
 	str = str.trim();
 	if (str.substr(-1) == '/' || str.substr(-1) == '#') {
@@ -358,7 +355,6 @@ function cleanURLString(str) {
 	}
 	return str;
 }
-
 /**
  * handles token validation.
  *
@@ -366,10 +362,11 @@ function cleanURLString(str) {
  * @return {Boolean} if valid user or not
  * @api private
  */
+
 function tokenValidator(token, callback) {
-	
 	if (token) {
 		user.validateSession(token, function(user, error) {
+			console.log('user: %j', user);
 			if (user) {
 				callback(true);
 			} else {

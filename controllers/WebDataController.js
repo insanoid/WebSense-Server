@@ -83,38 +83,47 @@ exports.trends = function(req, res) {
  * @api public
  */
 exports.nearby = function(req, res) {
-	var lat = parseFloat(req.param('lat'));
-	var lng = parseFloat(req.param('lng'));
-	var limit = config.max_trends_result;
-	if (req.param('limit')) {
-		if (parseInt(req.param('limit')) > 0) limit = parseInt(req.param('limit'));
-	}
-	var timeperiod = parseInt(req.param('duration'));
-	if (!(90 > lng && lng < -90) || !(180 > lat && lat < -180) || timeperiod < 1) {
-		webCollection.webTrendsInArea(req.param('duration'), lat, lng, function(error_info, result) {
-			if (result) {
-				if (result.length > limit) result = result.slice(0, limit);
-				result.sort(function(a, b) {
-					return parseInt(b.value) - parseInt(a.value)
-				});
+	tokenValidator(req.param('auth_token'), function(valid) {
+		if (valid == true) {
+			var lat = parseFloat(req.param('lat'));
+			var lng = parseFloat(req.param('lng'));
+			var limit = config.max_trends_result;
+			if (req.param('limit')) {
+				if (parseInt(req.param('limit')) > 0) limit = parseInt(req.param('limit'));
 			}
-			if (!error_info) {
-				associateURLRequests(result, function(data) {
-					res.json(data);
+			var timeperiod = parseInt(req.param('duration'));
+			if (!(90 > lng && lng < -90) || !(180 > lat && lat < -180) || timeperiod < 1) {
+				webCollection.webTrendsInArea(req.param('duration'), lat, lng, function(error_info, result) {
+					if (result) {
+						if (result.length > limit) result = result.slice(0, limit);
+						result.sort(function(a, b) {
+							return parseInt(b.value) - parseInt(a.value)
+						});
+					}
+					if (!error_info) {
+						associateURLRequests(result, function(data) {
+							res.json(data);
+						});
+					} else {
+						res.statusCode = 500;
+						return res.json({
+							error: "Invalid request."
+						});
+					}
 				});
 			} else {
-				res.statusCode = 500;
+				res.statusCode = 400;
 				return res.json({
-					error: "Invalid request."
+					error: "Invalid coordinates."
 				});
 			}
-		});
-	} else {
-		res.statusCode = 400;
-		return res.json({
-			error: "Invalid coordinates."
-		});
-	}
+		} else {
+			res.statusCode = 500;
+			return res.json({
+				error: "Invalid auth_token."
+			});
+		}
+	});
 }
 /**
  * API Call - Scrapes web info.
@@ -281,7 +290,6 @@ function replaceAll(find, replace, str) {
  */
 
 function tokenValidator(token, callback) {
-
 	if (token) {
 		user.validateSession(token, function(user, error) {
 			if (user) {
@@ -293,6 +301,6 @@ function tokenValidator(token, callback) {
 	} else {
 		callback(false);
 	}
-
 }
+
 exports.ValidURL = ValidURL;
