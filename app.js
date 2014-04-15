@@ -40,6 +40,7 @@ if ('development' == app.get('env')) {
 	app.use(express.errorHandler());
 }
 app.get('/', routes.index);
+app.get('/eula', routes.eula);
 app.post('/user/create', user.create);
 app.post('/user/authenticate', user.authenticate);
 
