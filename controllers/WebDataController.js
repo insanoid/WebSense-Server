@@ -204,17 +204,14 @@ function findAndUpdateWebsiteInfo(urlcur, callback) {
 			var $ = cheerio.load(html);
 			$('title').filter(function() {
 				var data = $(this);
-				console.log('here' + data);
 				if (!json.title) json.title = data.text();
 			})
 			$('meta[name="description"]').filter(function() {
 				var data = $(this);
-				console.log('here' + data.attr('content'));
 				if (!json.content) json.content = data.attr('content');
 			})
 			$('img[src$=jpg],img[src$=png]').filter(function() {
 				var data = $(this);
-				console.log('here' + data.attr('src'));
 				var url = "";
 				if (ValidURL(data.attr('src')) == true) {
 					url = data.attr('src');
