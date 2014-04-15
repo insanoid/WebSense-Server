@@ -18,5 +18,7 @@ config.mongo.collection.user = 'users';
 config.mongo.collection.app_usage = 'appusage';
 config.mongo.collection.app_info = 'appinfo';
 
+config.ignore_packages = [ "com.android.systemui", "com.google.android.googlequicksearchbox", null, "android", "com.android.settings", "com.sec.android.launcher" ];
+
 config.web.port = process.env.PORT || 3000;
 module.exports = config;
