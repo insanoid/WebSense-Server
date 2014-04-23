@@ -19,11 +19,10 @@ exports.initDBConnection = function(_dbConn) {
 	appInfoCollection = new AppInfoHandler(_dbConn);
 }
 /**
- * API Call - Shows the app usage trends for the area.
+ * API Call - pushes app usage data.
  *
- * @param {String} duration
- * @param {Double} latitude
- * @param {Double} Longitude
+ * @param {String} Auth_token
+ * @param {Double} app_info
  * @return {HTTPRESPONSE} response.
  * @api public
  */
@@ -32,7 +31,7 @@ exports.pushAppInfo = function(req, res) {
 	console.log("[PUSH]: %s", data.auth_token);
 	if (!data.app_info) {
 		res.json({
-			app_info: data.app_info
+			success: false
 		});
 	} else {
 		tokenValidator(data.auth_token, function(valid, userObj) {

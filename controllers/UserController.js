@@ -2,19 +2,15 @@ var config = require('../local.config');
 var validator = require('validator');
 var UsersCollection = require('../model/UserHandler').UsersCollection;
 var usersCollection = null;
-
-
 /**
  * Initialize the db connection.
  *
  * @param {DBConnection} already connected db connection.
  * @api public
  */
-exports.initDBConnection = function(_dbConn){
+exports.initDBConnection = function(_dbConn) {
 	usersCollection = new UsersCollection(_dbConn);
 }
-
-
 /**
  * API Call - Authenticates the user.
  *
@@ -66,11 +62,12 @@ exports.authenticate = function(req, res) {
  * @param {String} gender
  * @param {String} job_type
  * @param {String} uuid
+ * @param {String} device_info
  * @return {HTTPRESPONSE} response.
  * @api public
  */
 exports.create = function(req, res) {
-	console.log(req.param('password') + " " + req.param('uuid') + " " + req.param('username') + " " + req.param('gender') + req.param('job_type'));
+	console.log(req.param('password') + " " + req.param('uuid') + " " + req.param('username') + " " + req.param('gender') + req.param('job_type') + " - >"+ req.param('device_info'));
 	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('gender') || !req.param('job_type') || !req.param('uuid')) {
 		res.statusCode = 400;
 		return res.json({
@@ -84,7 +81,8 @@ exports.create = function(req, res) {
 					error: 'Email already exists, try logging in!'
 				});
 			} else {
-				var user = createUser(req.param('username'), encryptPassword(req.param('password')), req.param('uuid'));
+				var user = createUser(
+				req.param('username'), encryptPassword(req.param('password')), req.param('uuid'), req.param('gender'), req.param('job_type'), req.param('device_info'));
 				var auth_key = user.device_info[0].auth_token;
 				usersCollection.addNewUser(user, function(error, result) {
 					if (!error) {
@@ -130,13 +128,13 @@ exports.validateSession = function validateSession(_auth_key, callback) {
  * @api private
  */
 
-function createUser(_username, _password, _uuid, _gender, _job_type) {
+function createUser(_username, _password, _uuid, _gender, _job_type, _device_info) {
 	var user = {
 		username: _username,
 		password: _password,
 		gender: _gender,
 		job_type: _job_type,
-		device_info: [createNewDevice(_uuid)]
+		device_info: [createNewDevice(_uuid, _device_info)]
 	};
 	return user;
 }
@@ -149,23 +147,24 @@ function createUser(_username, _password, _uuid, _gender, _job_type) {
  * @api private
  */
 
-function generateAuthenticateToken(userObject, deviceId) {
+function generateAuthenticateToken(userObject, deviceId, deviceInfo) {
 	var newToken = "";
 	var newDevice = true;
 	if (userObject.device_info) {
 		for (var i = 0; i < userObject.device_info.length; i++) {
 			if (userObject.device_info[i].uuid == deviceId) {
 				newToken = userObject.device_info[i].auth_token = getNewToken();
+				userObject.device_info[i].device_details = deviceInfo;
 				newDevice = false;
 			}
 		}
 		if (newDevice) {
-			var device = createNewDevice(deviceId);
+			var device = createNewDevice(deviceId, deviceInfo);
 			newToken = device.auth_token;
 			userObject.device_info.push(device);
 		}
 	} else {
-		var device = createNewDevice(deviceId);
+		var device = createNewDevice(deviceId, deviceInfo);
 		newToken = device.auth_token;
 		userObject.device_info = [device];
 	}
@@ -180,8 +179,9 @@ function generateAuthenticateToken(userObject, deviceId) {
  * @api private
  */
 
-function createNewDevice(deviceId) {
+function createNewDevice(deviceId, deviceInfo) {
 	var device = {
+		device_details: JSON.parse(deviceInfo),
 		auth_token: getNewToken(),
 		uuid: deviceId,
 		last_logged_at: new Date()

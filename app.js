@@ -8,6 +8,7 @@ var path = require('path');
 var config = require('./local.config');
 var app = express();
 var user = require('./controllers/UserController');
+var contextInfo = require('./controllers/ContextController');
 var appController = require('./controllers/AppDataController');
 var web = require('./controllers/WebDataController');
 var mongoadapter = require('./model/MongoConnector');
@@ -19,6 +20,7 @@ databaseconnection.connect(config.mongo.host, config.mongo.port, function(_dbCon
 	user.initDBConnection(_dbConn);
 	appController.initDBConnection(_dbConn);
 	web.initDBConnection(_dbConn);
+	contextInfo.initDBConnection(_dbConn);
 
 });
 
@@ -50,6 +52,9 @@ app.get('/app/nearby/:duration', appController.nearby);
 app.post('/app/update', appController.pushAppInfo);
 app.get('/web/trends/:duration', web.trends);
 app.get('/web/nearby/:duration', web.nearby);
+
+app.post('/context/update', contextInfo.pushContextInfo);
+
 //private
 app.get('/app/scrape/:appId', appController.getAppInfo);
 http.createServer(app).listen(app.get('port'), function() {
