@@ -35,13 +35,13 @@ exports.pushAppInfo = function(req, res) {
 			app_info: data.app_info
 		});
 	} else {
-		tokenValidator(data.auth_token, function(valid) {
+		tokenValidator(data.auth_token, function(valid, userObj) {
 			if (valid == true) {
 				var now = new Date();
-				console.log("[%s] - [%s]:   %j", now.toString(), user.username, data.app_info);
+				console.log("[%s] - [%s]:   %j", now.toString(), userObj.username, data.app_info);
 				for (n in data.app_info) {
 					data.app_info[n].position = JSON.parse("[" + data.app_info[n].position + "]");
-					data.app_info[n].user_id = user._id;
+					data.app_info[n].user_id = userObj._id;
 					data.app_info[n].associated_url = cleanURLString(data.app_info[n].associated_url);
 				}
 				appCollection.addAppRecord(data.app_info, function(error_info, result) {
@@ -370,12 +370,12 @@ function tokenValidator(token, callback) {
 		user.validateSession(token, function(user, error) {
 			console.log('user: %j', user);
 			if (user) {
-				callback(true);
+				callback(true, user);
 			} else {
-				callback(false);
+				callback(false, null);
 			}
 		});
 	} else {
-		callback(false);
+		callback(false, null);
 	}
 }
