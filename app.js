@@ -54,7 +54,7 @@ app.get('/web/trends/:duration', web.trends);
 app.get('/web/nearby/:duration', web.nearby);
 
 app.post('/context/update', contextInfo.pushContextInfo);
-
+app.get('/users', user.findAll);
 //private
 app.get('/app/scrape/:appId', appController.getAppInfo);
 http.createServer(app).listen(app.get('port'), function() {

@@ -67,7 +67,7 @@ exports.authenticate = function(req, res) {
  * @api public
  */
 exports.create = function(req, res) {
-	console.log(req.param('password') + " " + req.param('uuid') + " " + req.param('username') + " " + req.param('gender') + req.param('job_type') + " - >"+ req.param('device_info'));
+	console.log(req.param('password') + " " + req.param('uuid') + " " + req.param('username') + " " + req.param('gender') + req.param('job_type') + " - >" + req.param('device_info'));
 	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('gender') || !req.param('job_type') || !req.param('uuid')) {
 		res.statusCode = 400;
 		return res.json({
@@ -100,6 +100,25 @@ exports.create = function(req, res) {
 		});
 	}
 }
+
+
+/**
+ * Test method to get all usrs.
+ *
+ * @return {User} User object.
+ * @api private
+ */
+exports.findAll = function(req, res) {
+	usersCollection.findAll(function(error, users) {
+		if (users) {
+			res.statusCode = 200;
+			return res.json({
+				users: users
+			});
+		}
+	});
+}
+
 /**
  * Validates the auth key.
  *
