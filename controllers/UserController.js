@@ -68,10 +68,11 @@ exports.authenticate = function(req, res) {
  */
 exports.create = function(req, res) {
 	console.log(req.param('password') + " " + req.param('uuid') + " " + req.param('username') + " " + req.param('gender') + req.param('job_type') + " - >" + req.param('device_info'));
-	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('gender') || !req.param('job_type') || !req.param('uuid')) {
+	
+	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('job_type') || !req.param('uuid')) {
 		res.statusCode = 400;
 		return res.json({
-			error: 'Require a valid username, password, gender, job_type.'
+			error: 'Require a valid username, password, job_type.'
 		});
 	} else {
 		usersCollection.getUserForEmail(req.param('username'), function(error, user) {
@@ -82,7 +83,7 @@ exports.create = function(req, res) {
 				});
 			} else {
 				var user = createUser(
-				req.param('username'), encryptPassword(req.param('password')), req.param('uuid'), req.param('gender'), req.param('job_type'), req.param('device_info'));
+				req.param('username'), encryptPassword(req.param('password')), req.param('uuid'), "UD", req.param('job_type'), req.param('device_info'));
 				var auth_key = user.device_info[0].auth_token;
 				usersCollection.addNewUser(user, function(error, result) {
 					if (!error) {
