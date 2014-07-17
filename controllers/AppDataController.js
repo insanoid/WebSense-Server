@@ -114,7 +114,8 @@ exports.trends = function(req, res) {
 						} else {
 							res.statusCode = 500;
 							return res.json({
-								error: "Invalid request."
+								error: "Invalid request.",
+								error:""
 							});
 						}
 					});
