@@ -50,5 +50,81 @@ ContextInfoHandler.prototype.addContextRecord = function(_contextInfo, callback)
 	});
 };
 
+/**
+ * Analytics Information
+ *
+ */
+/**
+ * fetches a collection of Context Information for a particular usage for a particular duration.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for context.
+ * @api public
+ */
+ContextInfoHandler.prototype.findAllReleventRecordsForUser = function(_userId, _duration, _endDuration, callback) {
+console.log("-->",_duration, _endDuration);
+	this.getCollection(function(error, contextcollection) {
+		if (error) callback(error)
+		else {
+			contextcollection.find({
+				user_id: _userId,
+				timestamp: {
+					$gte: Number(_duration),
+					$lt:Number(_endDuration)
+				}
+			}).toArray(function(error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+};
+/**
+ * fetches a collection of context records for all the users for a duration.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for context.
+ * @api public
+ */
+ContextInfoHandler.prototype.findAllReleventRecordsForAll = function(_duration, _endDuration, callback) {
+	
+	console.log("-->",_duration, _endDuration);
+	
+	this.getCollection(function(error, contextcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.user_id, {
+						count: 1
+					})
+				};
+			var reduce = function(key, values) {
+					var count = 0;
+					var totaltime = 0;
+					values.forEach(function(v) {
+						count += v['count'];
+					});
+					return {
+						count: count
+					};
+				};
+			contextcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					timestamp: {
+					$gte: Number(_duration),
+					$lt:Number(_endDuration)
+					}
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
 
 exports.ContextInfoHandler = ContextInfoHandler;

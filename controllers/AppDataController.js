@@ -186,6 +186,74 @@ exports.nearby = function(req, res) {
 		}
 	});
 }
+
+
+/**
+ * API Call - fetches user record count for an user.
+ *
+ * @param {String} email_address
+ * @param {long} start_duration
+ * @param {end} end_duration
+ * @return {HTTPRESPONSE} response.
+ * @api public
+ */
+exports.getUserAnalytics = function(req, res) {
+
+		getUserForEmail(req.param('email'), function(valid, userObj) {
+			if (valid == true) {
+				appCollection.findAllReleventRecordsForUser(userObj._id,req.param('startTime'), req.param('endTime'), function(error_info, result) {
+					if (!error_info) {
+						
+						
+						res.json({
+							user: userObj.username,
+							record_count: result.length
+						});
+					} else {
+						console.log("-- %s", error_info);
+						res.statusCode = 501;
+						return res.json({
+							error: "Invalid request."
+						});
+					}
+				});
+			} else {
+				res.statusCode = 500;
+				return res.json({
+					error: "Invalid auth_token."
+				});
+			}
+		});
+}
+
+/**
+ * API Call - fetches analyltics data for all users.
+ *
+ * @param {long} start_duration
+ * @param {end} end_duration
+ * @return {HTTPRESPONSE} response.
+ * @api public
+ */
+exports.getUsageAnalytics = function(req, res) {
+
+				appCollection.findAllReleventRecordsForAll(req.param('startTime'), req.param('endTime'), function(error_info, result) {
+					if (!error_info) {
+						
+						
+						res.json({
+						
+							usage_data: result
+						});
+					} else {
+						console.log("-- %s", error_info);
+						res.statusCode = 501;
+						return res.json({
+							error: "Invalid request."
+						});
+					}
+				});
+}
+
 /**
  * Get application information for the ID.
  *
@@ -367,6 +435,31 @@ function cleanURLString(str) {
 function tokenValidator(token, callback) {
 	if (token) {
 		user.validateSession(token, function(user, error) {
+			console.log('user: %j', user);
+			if (user) {
+				callback(true, user);
+			} else {
+				callback(false, null);
+			}
+		});
+	} else {
+		callback(false, null);
+	}
+}
+
+/**
+ * Fetches user the email ID.
+ *
+ * @param {String} email address.
+ * @return {Object} user record
+ * @api private
+ */
+
+function getUserForEmail(email, callback) {
+console.log('user: %j', email);
+	if (email) {
+	
+		user.userForEmail(email, function(user, error) {
 			console.log('user: %j', user);
 			if (user) {
 				callback(true, user);

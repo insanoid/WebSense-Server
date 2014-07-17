@@ -7,7 +7,6 @@ var Server = require('mongodb').Server;
 var BSON = require('mongodb').BSON;
 var ObjectID = require('mongodb').ObjectID;
 var config = require('../local.config');
-
 /**
  * Creates an access point
  *
@@ -18,7 +17,6 @@ var config = require('../local.config');
 AppUsageHandler = function(_dbConn) {
 	this.db = _dbConn;
 };
-
 /**
  * Creates an access point for handling generic app information.
  *
@@ -26,10 +24,9 @@ AppUsageHandler = function(_dbConn) {
  * @return {Object} handler object.
  * @api public
  */
-AppInfoHandler= function(_dbConn) {
+AppInfoHandler = function(_dbConn) {
 	this.db = _dbConn;
 };
-
 /**
  * Creates a collection object for the app usage.
  *
@@ -43,7 +40,6 @@ AppUsageHandler.prototype.getCollection = function(callback) {
 		else callback(null, usercollection);
 	});
 };
-
 /**
  * Creates a collection object for the app info collection.
  *
@@ -57,7 +53,6 @@ AppInfoHandler.prototype.getCollection = function(callback) {
 		else callback(null, appCollection);
 	});
 };
-
 /**
  * fetches a collection of app usage.
  *
@@ -76,7 +71,6 @@ AppUsageHandler.prototype.findAll = function(callback) {
 		}
 	});
 };
-
 /**
  * Creates a new appInfo [can be single or multiple]
  *
@@ -95,7 +89,6 @@ AppUsageHandler.prototype.addAppRecord = function(_appInfo, callback) {
 		}
 	});
 };
-
 /**
  * Fetches trends in app usage.
  *
@@ -104,7 +97,6 @@ AppUsageHandler.prototype.addAppRecord = function(_appInfo, callback) {
  * @api public
  */
 AppUsageHandler.prototype.appTrends = function(duration, callback) {
-
 	var packagesToIgnore = config.ignore_packages;
 	this.getCollection(function(error, appcollection) {
 		if (error) callback(error)
@@ -119,8 +111,14 @@ AppUsageHandler.prototype.appTrends = function(duration, callback) {
 				out: {
 					inline: 1
 				},
-				query:{package_name: { $nin: packagesToIgnore },
-				start_time:{$gt: duration}}
+				query: {
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					start_time: {
+						$gt: duration
+					}
+				}
 			}, function(error, result) {
 				if (error) callback(error)
 				else callback(null, result)
@@ -128,7 +126,6 @@ AppUsageHandler.prototype.appTrends = function(duration, callback) {
 		}
 	});
 };
-
 /**
  * Fetches trends in app usage.
  *
@@ -136,8 +133,7 @@ AppUsageHandler.prototype.appTrends = function(duration, callback) {
  * @param {function} callback function
  * @api public
  */
-AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude,_longitude,callback) {
-
+AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude, _longitude, callback) {
 	var packagesToIgnore = config.ignore_packages;
 	this.getCollection(function(error, appcollection) {
 		if (error) callback(error)
@@ -152,9 +148,20 @@ AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude,_longit
 				out: {
 					inline: 1
 				},
-				query:{package_name: { $nin: packagesToIgnore },
-				start_time:{$gte: duration},
-				position :{ $geoWithin : { $centerSphere :[[_latitude, _longitude], config.max_trends_result/3959]}}}
+				query: {
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					start_time: {
+						$gte: duration
+					},
+					position: {
+						$geoWithin: {
+							$centerSphere: [
+								[_latitude, _longitude], config.max_trends_result / 3959]
+						}
+					}
+				}
 			}, function(error, result) {
 				console.log('- %s', error);
 				if (error) callback(error)
@@ -163,7 +170,6 @@ AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude,_longit
 		}
 	});
 };
-
 /**
  * Fetches info about the apps.
  *
@@ -171,18 +177,19 @@ AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude,_longit
  * @api public
  */
 AppInfoHandler.prototype.AppInformation = function(callback) {
-
 	this.getCollection(function(error, appcollection) {
 		if (error) callback(error)
 		else {
-			appcollection.find({},{package_name:1, _id:0}).toArray(function(error, results) {
+			appcollection.find({}, {
+				package_name: 1,
+				_id: 0
+			}).toArray(function(error, results) {
 				if (error) callback(error)
 				else callback(null, results)
 			});
 		}
 	});
 };
-
 /**
  * Fetches info about the apps (for the given set).
  *
@@ -191,18 +198,21 @@ AppInfoHandler.prototype.AppInformation = function(callback) {
  * @api public
  */
 AppInfoHandler.prototype.AppInformationFor = function(appList, callback) {
-
 	this.getCollection(function(error, appcollection) {
 		if (error) callback(error)
 		else {
-			appcollection.find({package_name:{$in:appList, $exists:true}}).toArray(function(error, results) {
+			appcollection.find({
+				package_name: {
+					$in: appList,
+					$exists: true
+				}
+			}).toArray(function(error, results) {
 				if (error) callback(error)
 				else callback(null, results)
 			});
 		}
 	});
 };
-
 /**
  * Push info about the apps.
  *
@@ -210,13 +220,99 @@ AppInfoHandler.prototype.AppInformationFor = function(appList, callback) {
  * @api public
  */
 AppInfoHandler.prototype.appStoreInfo = function(appInfo, callback) {
-
 	this.getCollection(function(error, appcollection) {
 		if (error) callback(error)
 		else {
 			appcollection.insert(appInfo, function(error, results) {
 				if (error) callback(error)
 				else callback(null, results)
+			});
+		}
+	});
+};
+/**
+ * Analytics Information
+ *
+ */
+/**
+ * fetches a collection of app usage for a particular usage for a particular duration.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.findAllReleventRecordsForUser = function(_userId, _duration, _endDuration, callback) {
+var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.find({
+				user_id: _userId,
+				package_name: {
+						$nin: packagesToIgnore
+					},
+				start_time: {
+					$gt: _duration
+				},
+				end_time: {
+					$lt: _endDuration
+				}
+			}).toArray(function(error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+};
+/**
+ * fetches a collection of app usage for a all the users for a duration.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.findAllReleventRecordsForAll = function(_duration, _endDuration, callback) {
+	var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.user_id, {
+						count: 1,
+						active_time: this.active_time
+					})
+				};
+			var reduce = function(key, values) {
+					var count = 0;
+					var totaltime = 0;
+					values.forEach(function(v) {
+						count += v['count'];
+						totaltime += v['active_time']
+					});
+					return {
+						count: count,
+						active_time: totaltime
+					};
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					start_time: {
+						$gte: _duration
+					},
+					end_time: {
+						$lt: _endDuration
+					}
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
 			});
 		}
 	});

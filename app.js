@@ -37,6 +37,7 @@ app.use(express.methodOverride());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 // development only
 if ('development' == app.get('env')) {
 	app.use(express.errorHandler());
@@ -48,6 +49,12 @@ app.post('/user/authenticate', user.authenticate);
 
 app.get('/app/trends/:duration', appController.trends);
 app.get('/app/nearby/:duration', appController.nearby);
+
+app.get('/app/userrecords', appController.getUserAnalytics);
+app.get('/app/stats', appController.getUsageAnalytics);
+
+app.get('/context/userrecords', contextInfo.getUserAnalytics);
+app.get('/context/stats', contextInfo.getUsageAnalytics);
 
 app.post('/app/update', appController.pushAppInfo);
 app.get('/web/trends/:duration', web.trends);

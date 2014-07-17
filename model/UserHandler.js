@@ -86,6 +86,7 @@ UsersCollection.prototype.getUserForEmail = function(_username, callback) {
 	this.getCollection(function(error, usercollection) {
 		if (error) callback(error)
 		else {
+		
 			usercollection.findOne({
 				username: _username
 			}, function(error, result) {
@@ -153,4 +154,6 @@ UsersCollection.prototype.getUserForAuthToken = function(_auth_token, callback) 
 		}
 	});
 };
+
+
 exports.UsersCollection = UsersCollection;
