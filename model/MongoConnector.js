@@ -32,6 +32,7 @@ DatabaseAccessObject.prototype.connect = function(host, port, callback) {
 				}
 			});
 		} else {
+			callback(data);
 			console.log("Enter a username and password in the config file.");
 		}
 
