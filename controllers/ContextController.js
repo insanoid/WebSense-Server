@@ -9,7 +9,7 @@ var contextInfoCollection = null;
  * @param {DBConnection} already connected db connection.
  * @api public
  */
-exports.initDBConnection = function(_dbConn) {
+exports.initDBConnection = function (_dbConn) {
 	contextInfoCollection = new ContextInfoHandler(_dbConn);
 }
 /**
@@ -20,7 +20,7 @@ exports.initDBConnection = function(_dbConn) {
  * @return {HTTPRESPONSE} response.
  * @api public
  */
-exports.pushContextInfo = function(req, res) {
+exports.pushContextInfo = function (req, res) {
 	var data = req.body;
 	console.log("[PUSH]: %s", data.auth_token);
 	if (!data.context_info) {
@@ -28,22 +28,33 @@ exports.pushContextInfo = function(req, res) {
 			success: false
 		});
 	} else {
-		tokenValidator(data.auth_token, function(valid, userObj) {
+		tokenValidator(data.auth_token, function (valid, userObj) {
 			if (valid == true) {
 				var now = new Date();
 				console.log("[%s] - [%s]:   %j", now.toString(), userObj.username, data.context_info.length);
 				for (n in data.context_info) {
-					data.context_info[n].position = JSON.parse("[" + data.context_info[n].position + "]");
-					data.context_info[n].content = JSON.parse(data.context_info[n].content);
-					data.context_info[n].user_id = userObj._id;
+					
+					var contextTxt; 
+					try {
+						contextTxt = JSON.parse(data.context_info[n].content);
+					} catch (e) {
+						contextTxt = null;
+					}
+					
+					var content_string = data.context_info[n].content;
+					if (!(content_string == "{}" || content_string == "[]") && contextTxt!=null) {
+						data.context_info[n].position = JSON.parse("[" + data.context_info[n].position + "]");
+						data.context_info[n].content = JSON.parse(data.context_info[n].content);
+						data.context_info[n].user_id = userObj._id;
+					}
 				}
-				contextInfoCollection.addContextRecord(data.context_info, function(error_info, result) {
+				contextInfoCollection.addContextRecord(data.context_info, function (error_info, result) {
 					if (!error_info) {
 						res.json({
 							success: true
 						});
 					} else {
-						console.log("-- %s", error_info);
+						
 						res.statusCode = 501;
 						return res.json({
 							error: "Invalid request."
@@ -68,10 +79,10 @@ exports.pushContextInfo = function(req, res) {
  * @return {HTTPRESPONSE} response.
  * @api public
  */
-exports.getUserAnalytics = function(req, res) {
-	getUserForEmail(req.param('email'), function(valid, userObj) {
+exports.getUserAnalytics = function (req, res) {
+	getUserForEmail(req.param('email'), function (valid, userObj) {
 		if (valid == true) {
-			contextInfoCollection.findAllReleventRecordsForUser(userObj._id, req.param('startTime'), req.param('endTime'), function(error_info, result) {
+			contextInfoCollection.findAllReleventRecordsForUser(userObj._id, req.param('startTime'), req.param('endTime'), function (error_info, result) {
 				if (!error_info) {
 					res.json({
 						user: userObj.username,
@@ -101,8 +112,8 @@ exports.getUserAnalytics = function(req, res) {
  * @return {HTTPRESPONSE} response.
  * @api public
  */
-exports.getUsageAnalytics = function(req, res) {
-	contextInfoCollection.findAllReleventRecordsForAll(req.param('startTime'), req.param('endTime'), function(error_info, result) {
+exports.getUsageAnalytics = function (req, res) {
+	contextInfoCollection.findAllReleventRecordsForAll(req.param('startTime'), req.param('endTime'), function (error_info, result) {
 		if (!error_info) {
 			res.json({
 				usage_data: result
@@ -126,7 +137,7 @@ exports.getUsageAnalytics = function(req, res) {
 
 function tokenValidator(token, callback) {
 	if (token) {
-		user.validateSession(token, function(user, error) {
+		user.validateSession(token, function (user, error) {
 			console.log('user: %j', user);
 			if (user) {
 				callback(true, user);
@@ -149,7 +160,7 @@ function tokenValidator(token, callback) {
 function getUserForEmail(email, callback) {
 	console.log('user: %j', email);
 	if (email) {
-		user.userForEmail(email, function(user, error) {
+		user.userForEmail(email, function (user, error) {
 			console.log('user: %j', user);
 			if (user) {
 				callback(true, user);

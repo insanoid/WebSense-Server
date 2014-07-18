@@ -112,6 +112,7 @@ exports.trends = function(req, res) {
 								res.json(data);
 							});
 						} else {
+						console.log("---->"+error_info);
 							res.statusCode = 500;
 							return res.json({
 								error: "Invalid request.",
@@ -127,6 +128,7 @@ exports.trends = function(req, res) {
 				}
 			}
 		} else {
+		console.log("---->"+req.param('auth_token'));
 			res.statusCode = 500;
 			return res.json({
 				error: "Invalid auth_token."

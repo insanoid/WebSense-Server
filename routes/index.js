@@ -4,7 +4,7 @@
  */
 
 exports.index = function(req, res){
-  res.render('index', { title: 'Express' });
+  res.render('index', { title: 'Websense - A University of Birmingham (Network & Data Sciences Lab) Project' });
 };
 
 exports.eula = function(req, res){

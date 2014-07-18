@@ -132,6 +132,7 @@ UsersCollection.prototype.updateUserObject = function(_user_id, _user, callback)
 				else callback(null, result)
 			});
 		}
+
 	});
 };
 /**
@@ -148,8 +149,12 @@ UsersCollection.prototype.getUserForAuthToken = function(_auth_token, callback) 
 			usercollection.findOne({
 				"device_info.auth_token": _auth_token
 			}, function(error, result) {
-				if (error) callback(error)
-				else callback(null, result)
+				if (error){
+					callback(error)	
+				}
+				else {
+					callback(null, result);
+				}
 			});
 		}
 	});
