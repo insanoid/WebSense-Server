@@ -184,6 +184,29 @@ exports.associateURLRequests = function(urlInfo, callback) {
 		callback(urlInfo);
 	});
 }
+
+function associateURLRequests(urlInfo, callback) {
+	var urlList = [];
+	for (var n in urlInfo) {
+		urlList.push(urlInfo[n]._id);
+	}
+	webStorage.fetchInformationForURLs(urlList, function(error_info, result) {
+		for (var i in urlInfo) {
+			for (var trendIndex in urlInfo) {
+				for (var resultIndex in result) {
+					if (urlInfo[trendIndex]._id == result[resultIndex].url) {
+						urlInfo[trendIndex].url = urlInfo[trendIndex]._id;
+						urlInfo[trendIndex].title = result[resultIndex].title;
+						urlInfo[trendIndex].content = result[resultIndex].content;
+						urlInfo[trendIndex].content_image = result[resultIndex].content_image;
+					}
+				}
+			}
+		}
+		callback(urlInfo);
+	});
+}
+
 /**
  * Scrapes the URL for more information.
  *
