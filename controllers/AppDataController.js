@@ -413,6 +413,30 @@ exports.associateValues = function(appList, callback) {
 		callback(appList);
 	});
 }
+
+function associateValues(appList, callback) {
+	var appPackageName = [];
+	for (var n in appList) {
+		appPackageName.push(appList[n]._id);
+	}
+	var response = [];
+	appInfoCollection.AppInformationFor(appPackageName, function(error_info, result) {
+		for (var trendIndex in appList) {
+			appList[trendIndex].package_name = appList[trendIndex]._id;
+			delete appList[trendIndex]['_id'];
+			for (var resultIndex in result) {
+				if (appList[trendIndex].package_name == result[resultIndex].package_name) {
+					appList[trendIndex].app_name = result[resultIndex].app_name;
+					appList[trendIndex].category = result[resultIndex].category;
+					appList[trendIndex].app_icon = result[resultIndex].icon;
+				}
+			}
+		}
+		callback(appList);
+	});
+}
+
+
 /**
  * Cleans the URL by removing trailing splaces, backslashes and hash.
  *
