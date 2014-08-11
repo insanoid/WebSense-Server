@@ -264,6 +264,7 @@ var packagesToIgnore = config.ignore_packages;
 		}
 	});
 };
+
 /**
  * fetches a collection of app usage for a all the users for a duration.
  *
@@ -317,6 +318,153 @@ AppUsageHandler.prototype.findAllReleventRecordsForAll = function(_duration, _en
 		}
 	});
 };
+
+/**
+ * fetches a collection of app usage for a all the users for a duration between certain hours.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, timespan, callback) {
+	var packagesToIgnore = config.ignore_packages;
+	
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.package_name, this.active_time)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					start_time: {
+						$gte: duration
+					},
+					start_minute_day: {
+						$gte: startHour
+					},
+					start_minute_day: {
+						$lt: startHour+timespan
+					}
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+
+/**
+ * fetches a collection of app usage for a all the users for a duration between certain hours at a location.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.appTrendsDuringHoursAtLocation = function(duration, startHour, timespan, _latitude, _longitude, callback) {
+	var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.package_name, this.active_time)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					start_time: {
+						$gte: duration
+					},
+					start_minute_day: {
+						$gte: startHour
+					},
+					start_minute_day: {
+						$lt: startHour+timespan
+					},
+					position: {
+						$geoWithin: {
+							$centerSphere: [
+								[_latitude, _longitude], config.max_trends_result / 3959]
+						}
+					}
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+
+/**
+ * fetches a collection of app usage for a all the users for a duration between certain hours.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, timespan, callback) {
+	var packagesToIgnore = config.ignore_packages;
+	
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.package_name, this.active_time)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					start_time: {
+						$gte: duration
+					},
+					start_minute_day: {
+						$gte: startHour
+					},
+					start_minute_day: {
+						$lt: startHour+timespan
+					}
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+
 
 exports.AppInfoHandler = AppInfoHandler;
 exports.AppUsageHandler = AppUsageHandler;

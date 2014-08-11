@@ -11,6 +11,9 @@ var user = require('./controllers/UserController');
 var contextInfo = require('./controllers/ContextController');
 var appController = require('./controllers/AppDataController');
 var web = require('./controllers/WebDataController');
+
+var appAPI = require('./controllers/WebAPIController');
+
 var mongoadapter = require('./model/MongoConnector');
 
 
@@ -21,7 +24,7 @@ databaseconnection.connect(config.mongo.host, config.mongo.port, function(_dbCon
 	appController.initDBConnection(_dbConn);
 	web.initDBConnection(_dbConn);
 	contextInfo.initDBConnection(_dbConn);
-
+	appAPI.initDBConnection(_dbConn);
 });
 
 
@@ -59,6 +62,20 @@ app.get('/context/stats', contextInfo.getUsageAnalytics);
 app.post('/app/update', appController.pushAppInfo);
 app.get('/web/trends/:duration', web.trends);
 app.get('/web/nearby/:duration', web.nearby);
+
+
+
+//API Methods
+
+//APP information
+app.get('/api/app/trends/location/:duration/:lat/:lng/', appAPI.appNearby);
+app.get('/api/app/trends/time/:duration/:start_time/:timespan/', appAPI.appDuringHours);
+app.get('/api/app/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.appDuringHoursAtLocation);
+
+//WEB information
+app.get('/api/web/trends/location/:duration/:lat/:lng/', appAPI.webNearby);
+app.get('/api/web/trends/time/:duration/:start_time/:timespan/', appAPI.webDuringHours);
+app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.appDuringHoursAtLocation);
 
 app.post('/context/update', contextInfo.pushContextInfo);
 app.get('/users', user.findAll);
