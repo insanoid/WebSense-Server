@@ -486,8 +486,8 @@ function getUserForEmail(email, callback) {
 console.log('user: %j', email);
 	if (email) {
 	
-		user.userForEmail(email, function(user, error) {
-			console.log('user: %j', user);
+		user.findUser(email, function(user, error) {
+			console.log('user Found: %j', user);
 			if (user) {
 				callback(true, user);
 			} else {

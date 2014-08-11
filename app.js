@@ -63,8 +63,6 @@ app.post('/app/update', appController.pushAppInfo);
 app.get('/web/trends/:duration', web.trends);
 app.get('/web/nearby/:duration', web.nearby);
 
-
-
 //API Methods
 
 //APP information
@@ -79,6 +77,7 @@ app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:ln
 
 app.post('/context/update', contextInfo.pushContextInfo);
 app.get('/users', user.findAll);
+
 //private
 app.get('/app/scrape/:appId', appController.getAppInfo);
 http.createServer(app).listen(app.get('port'), function() {
