@@ -74,7 +74,7 @@ app.get('/api/app/trends/time/localised/:duration/:start_time/:timespan/:lat/:ln
 //WEB information
 app.get('/api/web/trends/location/:duration/:lat/:lng/', appAPI.webNearby);
 app.get('/api/web/trends/time/:duration/:start_time/:timespan/', appAPI.webDuringHours);
-app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.appDuringHoursAtLocation);
+app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.webDuringHoursAtLocation);
 
 app.post('/context/update', contextInfo.pushContextInfo);
 app.get('/users', user.findAll);
