@@ -163,7 +163,7 @@ exports.updateWebSiteInformationCollection = function updateWebSiteInformationCo
  * @api private
  */
 
-function associateURLRequests(urlInfo, callback) {
+exports.associateURLRequests = function(urlInfo, callback) {
 	var urlList = [];
 	for (var n in urlInfo) {
 		urlList.push(urlInfo[n]._id);

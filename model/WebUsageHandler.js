@@ -1,12 +1,14 @@
 /*
  * Handles the database requirements for the web usage.
  */
+
 var Db = require('mongodb').Db;
 var Connection = require('mongodb').Connection;
 var Server = require('mongodb').Server;
 var BSON = require('mongodb').BSON;
 var ObjectID = require('mongodb').ObjectID;
 var config = require('../local.config');
+
 /**
  * Creates an access point
  *
@@ -17,6 +19,7 @@ var config = require('../local.config');
 WebUsageHandler = function(_dbConn) {
 	this.db = _dbConn;
 };
+
 /**
  * Creates an access point for storing website information.
  *
@@ -27,6 +30,7 @@ WebUsageHandler = function(_dbConn) {
 WebStorageHandler = function(_dbConn) {
 	this.db = _dbConn;
 };
+
 /**
  * Creates a collection object for the web usage.
  *
@@ -40,6 +44,7 @@ WebUsageHandler.prototype.getCollection = function(callback) {
 		else callback(null, collection);
 	});
 };
+
 /**
  * Creates a collection object for the website's scrapped data.
  *
@@ -53,6 +58,7 @@ WebStorageHandler.prototype.getCollection = function(callback) {
 		else callback(null, collection);
 	});
 };
+
 /**
  * fetches a collection of web usage.
  *
@@ -79,6 +85,7 @@ WebUsageHandler.prototype.findAll = function(callback) {
 		}
 	});
 };
+
 /**
  * Fetches trends in website usage usage.
 
@@ -117,6 +124,7 @@ WebUsageHandler.prototype.webTrends = function(duration, callback) {
 		}
 	});
 };
+
 /**
  * Fetches trends in app usage in a particular area.
  *
@@ -164,6 +172,7 @@ WebUsageHandler.prototype.webTrendsInArea = function(duration, _latitude, _longi
 		}
 	});
 };
+
 /**
  * stores information about wevsite
  8 @param {JSON} web information object
@@ -181,6 +190,7 @@ WebStorageHandler.prototype.pushWebStoreInformation = function(webInfo, callback
 		}
 	});
 };
+
 /**
  * Fetches info about the websites dumped in the database (for the given set).
  *
@@ -204,6 +214,7 @@ WebStorageHandler.prototype.fetchInformationForURLs = function(urlList, callback
 		}
 	});
 };
+
 /**
  * Fetches list of all the URLs.
  *
@@ -224,5 +235,108 @@ WebStorageHandler.prototype.fetchStoredURLsList = function(callback) {
 		}
 	});
 };
+
+/**
+ * Fetches trends in app usage during a particular time duration.
+ *
+ * @param {double} duration
+ * @param {int} startHour
+ * @param {int} time duration
+ * @param {function} callback function
+ * @api public
+ */
+WebUsageHandler.prototype.webTrendsDuringHours = function(duration, startHour, timespan, callback) {
+	var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, collection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.associated_url, 1)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			collection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					"associated_url": {
+						$exists: true,
+						$ne: "-"
+					},
+					start_time: {
+						$gte: duration
+					},
+					start_minute_day: {
+						$gte: startHour
+					},
+					start_minute_day: {
+						$lt: startHour+timespan
+					}
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+/**
+ * Fetches trends in app usage during a particular time duration at a particular location.
+ *
+ * @param {double} duration
+ * @param {int} startHour
+ * @param {int} time duration
+ * @param {function} callback function
+ * @api public
+ */
+WebUsageHandler.prototype.webTrendsDuringHoursInArea =  function(duration, startHour, timespan, _latitude, _longitude, callback){
+	var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, collection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.associated_url, 1)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			collection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					"associated_url": {
+						$exists: true,
+						$ne: "-"
+					},
+					start_time: {
+						$gte: duration
+					},
+					start_minute_day: {
+						$gte: startHour
+					},
+					start_minute_day: {
+						$lt: startHour+timespan
+					},
+					position: {
+						$geoWithin: {
+							$centerSphere: [
+								[_latitude, _longitude], config.max_trends_result / 3959]
+						}
+					}
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
 exports.WebUsageHandler = WebUsageHandler;
 exports.WebStorageHandler = WebStorageHandler;

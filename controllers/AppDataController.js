@@ -392,7 +392,7 @@ function arrayUnique(a) {
  * @api private
  */
 
-function associateValues(appList, callback) {
+exports.associateValues = function(appList, callback) {
 	var appPackageName = [];
 	for (var n in appList) {
 		appPackageName.push(appList[n]._id);
