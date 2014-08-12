@@ -223,11 +223,47 @@ exports.getUserAnalytics = function(req, res) {
 			} else {
 				res.statusCode = 500;
 				return res.json({
-					error: "Invalid auth_token."
+					error: "Invalid email id."
 				});
 			}
 		});
 }
+
+/**
+ * API Call - fetches user recordlisting for an user.
+ *
+ * @param {String} email_address
+ * @param {long} start_duration
+ * @param {end} end_duration
+ * @return {HTTPRESPONSE} response.
+ * @api public
+ */
+exports.getUserAppUsageData = function(req, res) {
+
+		getUserForEmail(req.param('email'), function(valid, userObj) {
+			if (valid == true) {
+				appCollection.findAllReleventRecordsForUser(userObj._id,req.param('startTime'), req.param('endTime'), function(error_info, result) {
+					if (!error_info) {
+						
+						
+						res.json(result);
+					} else {
+						console.log("-- %s", error_info);
+						res.statusCode = 501;
+						return res.json({
+							error: "Invalid request."
+						});
+					}
+				});
+			} else {
+				res.statusCode = 500;
+				return res.json({
+					error: "Invalid email id."
+				});
+			}
+		});
+}
+
 
 /**
  * API Call - fetches analyltics data for all users.

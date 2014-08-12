@@ -29,7 +29,7 @@ databaseconnection.connect(config.mongo.host, config.mongo.port, function(_dbCon
 
 
 // all environments
-app.set('port', process.env.PORT || 3001);
+app.set('port', process.env.PORT || 80);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.favicon());
@@ -46,6 +46,7 @@ if ('development' == app.get('env')) {
 	app.use(express.errorHandler());
 }
 app.get('/', routes.index);
+
 app.get('/eula', routes.eula);
 app.post('/user/create', user.create);
 app.post('/user/authenticate', user.authenticate);
@@ -63,12 +64,18 @@ app.post('/app/update', appController.pushAppInfo);
 app.get('/web/trends/:duration', web.trends);
 app.get('/web/nearby/:duration', web.nearby);
 
+app.get('/app/userrecords/detailed', appController.getUserAppUsageData);
+
+app.get('/cluster', routes.cluster);
+app.get('/heatmap', routes.heatmap);
+
 //API Methods
 
 //APP information
 app.get('/api/app/trends/location/:duration/:lat/:lng/', appAPI.appNearby);
 app.get('/api/app/trends/time/:duration/:start_time/:timespan/', appAPI.appDuringHours);
 app.get('/api/app/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.appDuringHoursAtLocation);
+
 
 //WEB information
 app.get('/api/web/trends/location/:duration/:lat/:lng/', appAPI.webNearby);
