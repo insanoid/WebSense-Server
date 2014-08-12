@@ -114,7 +114,7 @@ exports.appDuringHours = function (req, res) {
 
 	var timeperiod = parseInt(req.param('duration'));
 
-	if (!(minutes < 0 || dayminute < 0 || timeperiod < 1)) {
+	if (!(minutes < 0 || dayminute < 0 || timeperiod < 0)) {
 		appCollection.appTrendsDuringHours(req.param('duration'), dayminute, minutes, function (error_info, result) {
 			if (result) {
 
@@ -137,7 +137,7 @@ exports.appDuringHours = function (req, res) {
 	} else {
 		res.statusCode = 400;
 		return res.json({
-			error: "Invalid coordinates."
+			error: "Invalid parameters."
 		});
 	}
 }
