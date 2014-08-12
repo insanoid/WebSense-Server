@@ -121,6 +121,22 @@ exports.findAll = function(req, res) {
 }
 
 /**
+ * Test method to get a single user.
+ *
+ * @return {User} User object.
+ * @api private
+ */
+exports.findUser = function(email ,callback) {
+	usersCollection.getUserForEmail(email, function(error, user) {
+		if (user) {
+			callback(user);
+		}else{
+			callback(null);
+		}
+	});
+}
+
+/**
  * Validates the auth key.
  *
  * @param {String} _auth_key

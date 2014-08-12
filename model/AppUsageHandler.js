@@ -230,102 +230,7 @@ AppInfoHandler.prototype.appStoreInfo = function(appInfo, callback) {
 		}
 	});
 };
-/**
- * Analytics Information
- *
- */
-/**
- * fetches a collection of app usage for a particular usage for a particular duration.
- *
- * @param {function} callback function
- * @return {Collection} the entire collection for app usage.
- * @api public
- */
-AppUsageHandler.prototype.findAllReleventRecordsForUser = function(_userId, _duration, _endDuration, callback) {
-var packagesToIgnore = config.ignore_packages;
-	this.getCollection(function(error, appcollection) {
-		if (error) callback(error)
-		else {
-			appcollection.find({
-				user_id: _userId,
-				package_name: {
-						$nin: packagesToIgnore
-					},
-				start_time: {
-					$gt: _duration
-				},
-				end_time: {
-					$lt: _endDuration
-				}
-			}).toArray(function(error_correction, results) {
-				if (error_correction) callback(error_correction)
-				else callback(null, results)
-			});
-		}
-	});
-};
 
-/**
- * fetches a collection of app usage for a all the users for a duration.
- *
- * @param {function} callback function
- * @return {Collection} the entire collection for app usage.
- * @api public
- */
-AppUsageHandler.prototype.findAllReleventRecordsForAll = function(_duration, _endDuration, callback) {
-	var packagesToIgnore = config.ignore_packages;
-	this.getCollection(function(error, appcollection) {
-		if (error) callback(error)
-		else {
-			var map = function() {
-					emit(this.user_id, {
-						count: 1,
-						active_time: this.active_time
-					})
-				};
-			var reduce = function(key, values) {
-					var count = 0;
-					var totaltime = 0;
-					values.forEach(function(v) {
-						count += v['count'];
-						totaltime += v['active_time']
-					});
-					return {
-						count: count,
-						active_time: totaltime
-					};
-				};
-			appcollection.mapReduce(map, reduce, {
-				out: {
-					inline: 1
-				},
-				query: {
-					package_name: {
-						$nin: packagesToIgnore
-					},
-					start_time: {
-						$gte: _duration
-					},
-					end_time: {
-						$lt: _endDuration
-					}
-				}
-			}, function(error, result) {
-				console.log('- %s', error);
-				if (error) callback(error)
-				else callback(null, result)
-			});
-		}
-	});
-};
-
-/**
- * fetches a collection of app usage for a all the users for a duration between certain hours.
- *
- * @param {function} callback function
- * @return {Collection} the entire collection for app usage.
- * @api public
- */
 AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, timespan, callback) {
 	var packagesToIgnore = config.ignore_packages;
 	
@@ -463,6 +368,108 @@ AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, t
 		}
 	});
 };
+
+
+/**
+ * Analytics Information
+ *
+ */
+
+/**
+ * fetches a collection of app usage for a particular usage for a particular duration.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.findAllReleventRecordsForUser = function(_userId, _duration, _endDuration, callback) {
+var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.find({
+				
+				user_id: _userId,
+				"position":{$ne:[0,0]},
+				package_name: {
+						$nin: packagesToIgnore
+					},
+				start_time: {
+					$gt: _duration
+				},
+				end_time: {
+					$lt: _endDuration
+				}
+
+			},{position:1,package_name:1}).toArray(function(error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+};
+
+/**
+ * fetches a collection of app usage for a all the users for a duration.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.findAllReleventRecordsForAll = function(_duration, _endDuration, callback) {
+	var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			var map = function() {
+					emit(this.user_id, {
+						count: 1,
+						active_time: this.active_time
+					})
+				};
+			var reduce = function(key, values) {
+					var count = 0;
+					var totaltime = 0;
+					values.forEach(function(v) {
+						count += v['count'];
+						totaltime += v['active_time']
+					});
+					return {
+						count: count,
+						active_time: totaltime
+					};
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					start_time: {
+						$gte: _duration
+					},
+					end_time: {
+						$lt: _endDuration
+					}
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+/**
+ * fetches a collection of app usage for a all the users for a duration between certain hours.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
 
 
 
