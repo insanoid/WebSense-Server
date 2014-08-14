@@ -15,6 +15,11 @@ exports.heatmap = function(req, res){
   res.render('heatmap', { title: 'Websense: Heatmap', email:req.param('email')});
 };
 
+exports.geocluster = function(req, res){
+  res.render('geocluster', { title: 'Websense: Geo-Cluster Algorithm', email:req.param('email')});
+};
+
+
 
 exports.eula = function(req, res){
   res.render('eula', { title: 'WebSense Android App: EULA/Concent' });

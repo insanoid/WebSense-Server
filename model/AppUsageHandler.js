@@ -71,6 +71,7 @@ AppUsageHandler.prototype.findAll = function(callback) {
 		}
 	});
 };
+
 /**
  * Creates a new appInfo [can be single or multiple]
  *
@@ -89,6 +90,26 @@ AppUsageHandler.prototype.addAppRecord = function(_appInfo, callback) {
 		}
 	});
 };
+
+/**
+ * saves appInfo [can be single or multiple]
+ *
+ * @param {AppObject/Array} _appInfo
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.saveRecord = function(_appInfo, callback) {
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.save(_appInfo, function(error, result) {
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
 /**
  * Fetches trends in app usage.
  *
@@ -470,6 +491,57 @@ AppUsageHandler.prototype.findAllReleventRecordsForAll = function(_duration, _en
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
+
+
+/**
+ * fetches a collection of app usage for a particular usage for a particular duration.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.findClusteredLocationForUser = function(_userId, _duration, _endDuration, callback) {
+	var packagesToIgnore = config.ignore_packages;
+	
+	this.getCollection(function(error, appcollection) {
+		if (error) callback(error)
+		else {
+		
+		
+			var map = function() {
+					emit(this.geohashZ1, 1)
+				};
+			var reduce = function(key, values) {
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					user_id: _userId,
+					package_name: {
+						$nin: packagesToIgnore
+					},
+				start_time: {
+					$gt: _duration
+				},
+				end_time: {
+					$lt: _endDuration
+				},
+				geohash: {
+					$exists: true
+				}
+				
+				}
+			}, function(error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
 
 
 

@@ -4,6 +4,8 @@ var user = require('./UserController');
 var webData = require('./WebDataController');
 var request = require('request');
 var cheerio = require('cheerio');
+var geohash = require('ngeohash');
+
 var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
 var AppInfoHandler = require('../model/AppUsageHandler').AppInfoHandler;
 var appCollection = null;
@@ -190,7 +192,6 @@ exports.nearby = function(req, res) {
 	});
 }
 
-
 /**
  * API Call - fetches user record count for an user.
  *
@@ -249,6 +250,52 @@ exports.getUserAppUsageData = function(req, res) {
 						res.json(result);
 					} else {
 						console.log("-- %s", error_info);
+						res.statusCode = 501;
+						return res.json({
+							error: "Invalid request."
+						});
+					}
+				});
+			} else {
+				res.statusCode = 500;
+				return res.json({
+					error: "Invalid email id."
+				});
+			}
+		});
+}
+
+/**
+ * API Call - processes user's data and analyses geo spatial clusters.
+ *
+ * @param {String} email_address
+ * @param {long} start_duration
+ * @param {end} end_duration
+ * @return {HTTPRESPONSE} response.
+ * @api public
+ */
+exports.getUserGeoCluster = function(req, res) {
+
+		getUserForEmail(req.param('email'), function(valid, userObj) {
+			if (valid == true) {
+				appCollection.findClusteredLocationForUser(userObj._id,req.param('startTime'), req.param('endTime'), function(error_info, result) {
+					if (!error_info) {
+						
+					
+						result.sort(function(a, b) {
+							return parseInt(b.value) - parseInt(a.value)
+						});
+						if (result.length > 3) result = result.slice(0, 3);
+						
+						for(i in result){
+						console.log("-->"+result[i]._id);
+							var loc =  geohash.decode(result[i]._id);
+							result[i].position = [loc.latitude, loc.longitude];
+						}
+
+						res.json(result);
+					} else {
+						
 						res.statusCode = 501;
 						return res.json({
 							error: "Invalid request."

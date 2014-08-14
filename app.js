@@ -67,6 +67,7 @@ app.get('/app/userrecords/detailed', appController.getUserAppUsageData);
 
 app.get('/cluster', routes.cluster);
 app.get('/heatmap', routes.heatmap);
+app.get('/geocluster', routes.geocluster);
 
 //API Methods
 
@@ -75,6 +76,8 @@ app.get('/api/app/trends/location/:duration/:lat/:lng/', appAPI.appNearby);
 app.get('/api/app/trends/time/:duration/:start_time/:timespan/', appAPI.appDuringHours);
 app.get('/api/app/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.appDuringHoursAtLocation);
 
+app.get('/debug/update', appAPI.updateAll);
+app.get('/debug/cluster', appController.getUserGeoCluster);
 
 //WEB information
 app.get('/api/web/trends/location/:duration/:lat/:lng/', appAPI.webNearby);
