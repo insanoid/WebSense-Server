@@ -261,6 +261,13 @@ AppInfoHandler.prototype.appStoreInfo = function (appInfo, callback) {
 	});
 };
 
+/**
+ * fetches a collection of app usage for a all the users for a duration between certain hours.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
 AppUsageHandler.prototype.appTrendsDuringHours = function (duration, startHour, timespan, callback) {
 	var packagesToIgnore = config.ignore_packages;
 
@@ -401,7 +408,7 @@ AppUsageHandler.prototype.appTrendsDuringHours = function (duration, startHour, 
 
 
 /**
- * Analytics Information
+ * Analytics & Processing Methods.
  *
  */
 
@@ -499,14 +506,6 @@ AppUsageHandler.prototype.findAllReleventRecordsForAll = function (_duration, _e
 };
 
 /**
- * fetches a collection of app usage for a all the users for a duration between certain hours.
- *
- * @param {function} callback function
- * @return {Collection} the entire collection for app usage.
- * @api public
- */
-
-/**
  * processes information to get clustered and significant location.
  *
  * @param {function} callback function
@@ -555,7 +554,6 @@ AppUsageHandler.prototype.findClusteredLocationForUser = function (_userId, _dur
 		}
 	});
 };
-
 
 /**
  * fetches a collection of app usage for a particular usage for a particular duration.

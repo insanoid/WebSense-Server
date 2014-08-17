@@ -33,6 +33,7 @@ UsersCollection.prototype.getCollection = function(callback) {
 		else callback(null, usercollection);
 	});
 };
+
 /**
  * fetches a collection of user.
  *
@@ -51,6 +52,7 @@ UsersCollection.prototype.findAll = function(callback) {
 		}
 	});
 };
+
 /**
  * checks if the user record exists for the credentials.
  *
@@ -74,6 +76,7 @@ UsersCollection.prototype.authenticateUser = function(_username, _password, call
 		}
 	});
 };
+
 /**
  * gets user for the email address.
  *
@@ -96,6 +99,7 @@ UsersCollection.prototype.getUserForEmail = function(_username, callback) {
 		}
 	});
 };
+
 /**
  * Creates a new user
  *
@@ -114,6 +118,7 @@ UsersCollection.prototype.addNewUser = function(_user, callback) {
 		}
 	});
 };
+
 /**
  * Updates the user information.
  *
@@ -135,6 +140,7 @@ UsersCollection.prototype.updateUserObject = function(_user_id, _user, callback)
 
 	});
 };
+
 /**
  * Fetches the user record for the auth token
  *

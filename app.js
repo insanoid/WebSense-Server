@@ -7,13 +7,17 @@ var http = require('http');
 var path = require('path');
 var config = require('./local.config');
 var app = express();
+
+///	Custom controllers.
 var user = require('./controllers/UserController');
 var contextInfo = require('./controllers/ContextController');
 var appController = require('./controllers/AppDataController');
 var web = require('./controllers/WebDataController');
 
+/// API Controller
 var appAPI = require('./controllers/WebAPIController');
 
+/// Database controller
 var mongoadapter = require('./model/MongoConnector');
 
 
@@ -34,6 +38,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.favicon());
 app.use(express.logger('dev'));
+
 app.use(express.json({
 	limit: '500mb'
 }));
@@ -48,8 +53,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 if ('development' == app.get('env')) {
 	app.use(express.errorHandler());
 }
-app.get('/', routes.index);
 
+
+/// Webpage routes (Simple HTML Pages)
+
+app.get('/', routes.index);
 app.get('/eula', routes.eula);
 app.post('/user/create', user.create);
 app.post('/user/authenticate', user.authenticate);
@@ -74,12 +82,12 @@ app.get('/heatmap', routes.heatmap);
 app.get('/geocluster', routes.geocluster);
 app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.webDuringHoursAtLocation);
 
+
 //API Methods
 //APP information
 app.get('/api/app/trends/location/:duration/:lat/:lng/', appAPI.appNearby);
 app.get('/api/app/trends/time/:duration/:start_time/:timespan/', appAPI.appDuringHours);
 app.get('/api/app/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.appDuringHoursAtLocation);
-
 
 
 //DEBUG calls

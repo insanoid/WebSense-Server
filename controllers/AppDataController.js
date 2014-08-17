@@ -10,6 +10,7 @@ var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
 var AppInfoHandler = require('../model/AppUsageHandler').AppInfoHandler;
 var appCollection = null;
 var appInfoCollection = null;
+
 /**
  * Initialize the db connection.
  *
@@ -20,6 +21,7 @@ exports.initDBConnection = function(_dbConn) {
 	appCollection = new AppUsageHandler(_dbConn);
 	appInfoCollection = new AppInfoHandler(_dbConn);
 }
+
 /**
  * API Call - pushes app usage data.
  *
@@ -97,6 +99,7 @@ exports.pushAppInfo = function(req, res) {
 		});
 	}
 }
+
 /**
  * API Call - Shows the app usage trends.
  *
@@ -544,7 +547,6 @@ function associateValues(appList, callback) {
  * @param {String} URL.
  * @api private
  */
-
 function cleanURLString(str) {
 	str = str.trim();
 	if (str.substr(-1) == '/' || str.substr(-1) == '#') {
@@ -552,6 +554,7 @@ function cleanURLString(str) {
 	}
 	return str;
 }
+
 /**
  * handles token validation.
  *
@@ -559,7 +562,6 @@ function cleanURLString(str) {
  * @return {Boolean} if valid user or not
  * @api private
  */
-
 function tokenValidator(token, callback) {
 	if (token) {
 		user.validateSession(token, function(user, error) {
@@ -582,7 +584,6 @@ function tokenValidator(token, callback) {
  * @return {Object} user record
  * @api private
  */
-
 function getUserForEmail(email, callback) {
 console.log('user: %j', email);
 	if (email) {

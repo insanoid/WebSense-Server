@@ -21,5 +21,5 @@ config.mongo.collection.context_info = 'contextinfo';
 
 config.ignore_packages = [ "com.android.systemui", "com.google.android.googlequicksearchbox", null, "android", "com.android.settings", "com.sec.android.launcher" ];
 
-config.web.port = process.env.PORT || 3000;
+config.web.port = process.env.PORT || 21129;
 module.exports = config;

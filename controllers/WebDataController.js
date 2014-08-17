@@ -8,6 +8,7 @@ var WebUsageHandler = require('../model/WebUsageHandler').WebUsageHandler;
 var WebStorageHandler = require('../model/WebUsageHandler').WebStorageHandler
 var webCollection = null;
 var webStorage = null;
+
 /**
  * Initialize the db connection.
  *
@@ -18,6 +19,7 @@ exports.initDBConnection = function(_dbConn) {
 	webCollection = new WebUsageHandler(_dbConn);
 	webStorage = new WebStorageHandler(_dbConn);
 }
+
 /**
  * API Call - Shows the web usage trends.
  *
@@ -74,6 +76,7 @@ exports.trends = function(req, res) {
 		}
 	});
 }
+
 /**
  * API Call - Shows the web usage trends for a particular area.
  *
@@ -156,13 +159,13 @@ exports.updateWebSiteInformationCollection = function updateWebSiteInformationCo
 		}
 	});
 }
+
 /**
  * Associates the URL list to the pre-saved content in the db.
  *
  * @param {Array} website url array.
  * @api private
  */
-
 exports.associateURLRequests = function(urlInfo, callback) {
 	var urlList = [];
 	for (var n in urlInfo) {
@@ -213,7 +216,6 @@ function associateURLRequests(urlInfo, callback) {
  * @param {Array} application array.
  * @api private
  */
-
 function findAndUpdateWebsiteInfo(urlcur, callback) {
 	var json = {
 		url: urlcur,
@@ -262,6 +264,7 @@ function findAndUpdateWebsiteInfo(urlcur, callback) {
 		}
 	});
 }
+
 /**
  * URL validation.
  *
@@ -269,11 +272,11 @@ function findAndUpdateWebsiteInfo(urlcur, callback) {
  * @return {Boolean} if valid url or not
  * @api private
  */
-
 function ValidURL(s) {
 	var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
 	return regexp.test(s);
 }
+
 /**
  * Replaces occurance of content with something else.
  *
@@ -283,10 +286,10 @@ function ValidURL(s) {
  * @return {string} processed string
  * @api private
  */
-
 function replaceAll(find, replace, str) {
 	return str.replace(new RegExp(find, 'g'), replace);
 }
+
 /**
  * handles token validation.
  *
@@ -294,7 +297,6 @@ function replaceAll(find, replace, str) {
  * @return {Boolean} if valid user or not
  * @api private
  */
-
 function tokenValidator(token, callback) {
 	if (token) {
 		user.validateSession(token, function(user, error) {

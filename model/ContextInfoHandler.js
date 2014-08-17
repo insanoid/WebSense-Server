@@ -95,6 +95,7 @@ ContextInfoHandler.prototype.saveRecord = function (_contextInfo, callback) {
  * Analytics Information
  *
  */
+
 /**
  * fetches a collection of Context Information for a particular usage for a particular duration.
  *
@@ -120,6 +121,7 @@ ContextInfoHandler.prototype.findAllReleventRecordsForUser = function(_userId, _
 		}
 	});
 };
+
 /**
  * fetches a collection of context records for all the users for a duration.
  *

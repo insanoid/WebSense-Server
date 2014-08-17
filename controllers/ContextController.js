@@ -220,6 +220,7 @@ function tokenValidator(token, callback) {
 		callback(false, null);
 	}
 }
+
 /**
  * Fetches user the email ID.
  *
@@ -227,7 +228,6 @@ function tokenValidator(token, callback) {
  * @return {Object} user record
  * @api private
  */
-
 function getUserForEmail(email, callback) {
 	console.log('user: %j', email);
 	if (email) {

@@ -1,6 +1,6 @@
 
 /*
- * GET home page.
+ * GET normal HTML pages.
  */
 
 exports.index = function(req, res){
@@ -18,8 +18,6 @@ exports.heatmap = function(req, res){
 exports.geocluster = function(req, res){
   res.render('geocluster', { title: 'Websense: Geo-Cluster Algorithm', email:req.param('email')});
 };
-
-
 
 exports.eula = function(req, res){
   res.render('eula', { title: 'WebSense Android App: EULA/Concent' });
