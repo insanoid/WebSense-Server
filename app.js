@@ -83,7 +83,8 @@ app.get('/api/app/trends/time/localised/:duration/:start_time/:timespan/:lat/:ln
 
 
 //DEBUG calls
-app.get('/debug/update', appAPI.updateAll);
+app.get('/debug/app/update', appAPI.updateAll);
+app.get('/debug/context/update', contextInfo.updateAllContext);
 app.get('/debug/cluster', appController.getUserGeoCluster);
 
 //WEB information

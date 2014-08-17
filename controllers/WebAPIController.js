@@ -359,7 +359,7 @@ exports.webDuringHoursAtLocation = function (req, res) {
 
 
 /**
- * API Call - Updates records with geohashtags.
+ * API Call - Updates records with geohashtags of application.
  *
  * @return {HTTPRESPONSE} response.
  * @api public
@@ -410,3 +410,5 @@ exports.updateAll = function (req, res) {
 	});
 
 }
+
+

@@ -25,11 +25,32 @@ ContextInfoHandler = function(_dbConn) {
  * @api public
  */
 ContextInfoHandler.prototype.getCollection = function(callback) {
+
 	this.db.collection(config.mongo.collection.context_info, function(error, contextcollection) {
 		if (error) callback(error);
 		else callback(null, contextcollection);
 	});
 };
+
+/**
+ * fetches a collection of context.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+ContextInfoHandler.prototype.findAll = function (callback) {
+	this.getCollection(function (error, ctxcollection) {
+		if (error) callback(error)
+		else {
+			ctxcollection.find().toArray(function (error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+};
+
 
 /**
  * Creates a new contextinfo [can be single or multiple]
@@ -39,10 +60,30 @@ ContextInfoHandler.prototype.getCollection = function(callback) {
  * @api public
  */
 ContextInfoHandler.prototype.addContextRecord = function(_contextInfo, callback) {
+
 	this.getCollection(function(error, contextcollection) {
 		if (error) callback(error)
 		else {
 			contextcollection.insert(_contextInfo, function(error, result) {
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+/**
+ * saves contextinfo [can be single or multiple]
+ *
+ * @param {contextObject/Array} _contextInfo
+ * @param {function} callback function
+ * @api public
+ */
+ContextInfoHandler.prototype.saveRecord = function (_contextInfo, callback) {
+	this.getCollection(function (error, ctxcollection) {
+		if (error) callback(error)
+		else {
+			ctxcollection.save(_contextInfo, function (error, result) {
 				if (error) callback(error)
 				else callback(null, result)
 			});
@@ -62,7 +103,7 @@ ContextInfoHandler.prototype.addContextRecord = function(_contextInfo, callback)
  * @api public
  */
 ContextInfoHandler.prototype.findAllReleventRecordsForUser = function(_userId, _duration, _endDuration, callback) {
-console.log("-->",_duration, _endDuration);
+
 	this.getCollection(function(error, contextcollection) {
 		if (error) callback(error)
 		else {
@@ -87,8 +128,6 @@ console.log("-->",_duration, _endDuration);
  * @api public
  */
 ContextInfoHandler.prototype.findAllReleventRecordsForAll = function(_duration, _endDuration, callback) {
-	
-	console.log("-->",_duration, _endDuration);
 	
 	this.getCollection(function(error, contextcollection) {
 		if (error) callback(error)

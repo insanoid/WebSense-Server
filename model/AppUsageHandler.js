@@ -7,6 +7,7 @@ var Server = require('mongodb').Server;
 var BSON = require('mongodb').BSON;
 var ObjectID = require('mongodb').ObjectID;
 var config = require('../local.config');
+
 /**
  * Creates an access point
  *
@@ -17,6 +18,7 @@ var config = require('../local.config');
 AppUsageHandler = function (_dbConn) {
 	this.db = _dbConn;
 };
+
 /**
  * Creates an access point for handling generic app information.
  *
@@ -27,6 +29,7 @@ AppUsageHandler = function (_dbConn) {
 AppInfoHandler = function (_dbConn) {
 	this.db = _dbConn;
 };
+
 /**
  * Creates a collection object for the app usage.
  *
@@ -40,6 +43,7 @@ AppUsageHandler.prototype.getCollection = function (callback) {
 		else callback(null, usercollection);
 	});
 };
+
 /**
  * Creates a collection object for the app info collection.
  *
@@ -53,6 +57,7 @@ AppInfoHandler.prototype.getCollection = function (callback) {
 		else callback(null, appCollection);
 	});
 };
+
 /**
  * fetches a collection of app usage.
  *
@@ -147,6 +152,7 @@ AppUsageHandler.prototype.appTrends = function (duration, callback) {
 		}
 	});
 };
+
 /**
  * Fetches trends in app usage.
  *
@@ -191,6 +197,7 @@ AppUsageHandler.prototype.appTrendsInArea = function (duration, _latitude, _long
 		}
 	});
 };
+
 /**
  * Fetches info about the apps.
  *
@@ -211,6 +218,7 @@ AppInfoHandler.prototype.AppInformation = function (callback) {
 		}
 	});
 };
+
 /**
  * Fetches info about the apps (for the given set).
  *
@@ -234,6 +242,7 @@ AppInfoHandler.prototype.AppInformationFor = function (appList, callback) {
 		}
 	});
 };
+
 /**
  * Push info about the apps.
  *
@@ -497,9 +506,8 @@ AppUsageHandler.prototype.findAllReleventRecordsForAll = function (_duration, _e
  * @api public
  */
 
-
 /**
- * fetches a collection of app usage for a particular usage for a particular duration.
+ * processes information to get clustered and significant location.
  *
  * @param {function} callback function
  * @return {Collection} the entire collection for app usage.

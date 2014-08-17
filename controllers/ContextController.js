@@ -144,6 +144,61 @@ exports.getUsageAnalytics = function (req, res) {
 		}
 	});
 }
+
+
+/**
+ * API Call - Updates records with geohashtags of context.
+ *
+ * @return {HTTPRESPONSE} response.
+ * @api public
+ */
+exports.updateAllContext = function (req, res) {
+
+	contextInfoCollection.findAll(function (error_info, result) {
+		if (result) {
+			var modifiedRecords = [];
+			for (n in result) {
+				var coordinate = result[n].position;
+				var lat = coordinate[0];
+				var lng = coordinate[1];
+				if (lat != 0 || lng != 0) {
+
+					var hash = geohash.encode(lat, lng);
+					result[n].geohash = hash;
+					result[n].geohashZ1 = hash.substring(0, hash.length - 1);
+					result[n].geohashZ2 = hash.substring(0, hash.length - 2);
+					result[n].geohashZ3 = hash.substring(0, hash.length - 3);
+
+					modifiedRecords.push(result[n]);
+				}
+			}
+
+			var j = 0;
+			var total = modifiedRecords.length;
+			for (i in modifiedRecords) {
+				contextInfoCollection.saveRecord(modifiedRecords[i], function (err, success) {
+					j++;
+					console.log("Updated Item - %d/%d", j, total);
+					if (total < (j + 1)) {
+						return res.json({
+							"count": result.length
+						});
+					}
+				});
+			}
+
+		} else if (!error_info) {
+
+		} else {
+			res.statusCode = 500;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
+
+}
+
 /**
  * handles token validation.
  *
@@ -151,7 +206,6 @@ exports.getUsageAnalytics = function (req, res) {
  * @return {Boolean} if valid user or not
  * @api private
  */
-
 function tokenValidator(token, callback) {
 	if (token) {
 		user.validateSession(token, function (user, error) {
