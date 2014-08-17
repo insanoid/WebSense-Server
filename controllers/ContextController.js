@@ -42,10 +42,25 @@ exports.pushContextInfo = function (req, res) {
 					}
 					
 					var content_string = data.context_info[n].content;
+					
 					if (!(content_string == "{}" || content_string == "[]") && contextTxt!=null) {
 						data.context_info[n].position = JSON.parse("[" + data.context_info[n].position + "]");
 						data.context_info[n].content = JSON.parse(data.context_info[n].content);
 						data.context_info[n].user_id = userObj._id;
+						
+						var coordinate = data.context_info[n].position;
+						var lat = coordinate[0];
+						var lng = coordinate[1];
+					
+						if (lat != 0 || lng != 0) {
+						
+							var hash = geohash.encode(lat, lng);
+							data.context_info[n].geohash = hash;
+							data.context_info[n].geohashZ1 = hash.substring(0, hash.length - 1);
+							data.context_info[n].geohashZ2 = hash.substring(0, hash.length - 2);
+							data.context_info[n].geohashZ3 = hash.substring(0, hash.length - 3);
+						}
+						
 					}
 				}
 				contextInfoCollection.addContextRecord(data.context_info, function (error_info, result) {

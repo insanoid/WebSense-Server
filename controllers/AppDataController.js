@@ -38,13 +38,31 @@ exports.pushAppInfo = function(req, res) {
 	} else {
 		tokenValidator(data.auth_token, function(valid, userObj) {
 			if (valid == true) {
+				
 				var now = new Date();
 				console.log("[%s] - [%s]:   %j", now.toString(), userObj.username, data.app_info);
+				
 				for (n in data.app_info) {
+					
 					data.app_info[n].position = JSON.parse("[" + data.app_info[n].position + "]");
 					data.app_info[n].user_id = userObj._id;
 					data.app_info[n].associated_url = cleanURLString(data.app_info[n].associated_url);
+					
+					var coordinate = data.app_info[n].position;
+					var lat = coordinate[0];
+					var lng = coordinate[1];
+					
+					if (lat != 0 || lng != 0) {
+	
+						var hash = geohash.encode(lat, lng);
+						data.app_info[n].geohash = hash;
+						data.app_info[n].geohashZ1 = hash.substring(0, hash.length - 1);
+						data.app_info[n].geohashZ2 = hash.substring(0, hash.length - 2);
+						data.app_info[n].geohashZ3 = hash.substring(0, hash.length - 3);
+					}
+				
 				}
+	
 				appCollection.addAppRecord(data.app_info, function(error_info, result) {
 					if (!error_info) {
 						//Add to app datbase.

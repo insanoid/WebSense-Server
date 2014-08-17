@@ -14,7 +14,7 @@ var config = require('../local.config');
  * @return {Object} handler object.
  * @api public
  */
-AppUsageHandler = function(_dbConn) {
+AppUsageHandler = function (_dbConn) {
 	this.db = _dbConn;
 };
 /**
@@ -24,7 +24,7 @@ AppUsageHandler = function(_dbConn) {
  * @return {Object} handler object.
  * @api public
  */
-AppInfoHandler = function(_dbConn) {
+AppInfoHandler = function (_dbConn) {
 	this.db = _dbConn;
 };
 /**
@@ -34,8 +34,8 @@ AppInfoHandler = function(_dbConn) {
  * @return {Collection} the entire collection for the object.
  * @api public
  */
-AppUsageHandler.prototype.getCollection = function(callback) {
-	this.db.collection(config.mongo.collection.app_usage, function(error, usercollection) {
+AppUsageHandler.prototype.getCollection = function (callback) {
+	this.db.collection(config.mongo.collection.app_usage, function (error, usercollection) {
 		if (error) callback(error);
 		else callback(null, usercollection);
 	});
@@ -47,8 +47,8 @@ AppUsageHandler.prototype.getCollection = function(callback) {
  * @return {Collection} the entire collection for the object.
  * @api public
  */
-AppInfoHandler.prototype.getCollection = function(callback) {
-	this.db.collection(config.mongo.collection.app_info, function(error, appCollection) {
+AppInfoHandler.prototype.getCollection = function (callback) {
+	this.db.collection(config.mongo.collection.app_info, function (error, appCollection) {
 		if (error) callback(error);
 		else callback(null, appCollection);
 	});
@@ -60,11 +60,11 @@ AppInfoHandler.prototype.getCollection = function(callback) {
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-AppUsageHandler.prototype.findAll = function(callback) {
-	this.getCollection(function(error, appcollection) {
+AppUsageHandler.prototype.findAll = function (callback) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			appcollection.find().toArray(function(error_correction, results) {
+			appcollection.find().toArray(function (error_correction, results) {
 				if (error_correction) callback(error_correction)
 				else callback(null, results)
 			});
@@ -79,11 +79,11 @@ AppUsageHandler.prototype.findAll = function(callback) {
  * @param {function} callback function
  * @api public
  */
-AppUsageHandler.prototype.addAppRecord = function(_appInfo, callback) {
-	this.getCollection(function(error, appcollection) {
+AppUsageHandler.prototype.addAppRecord = function (_appInfo, callback) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			appcollection.insert(_appInfo, function(error, result) {
+			appcollection.insert(_appInfo, function (error, result) {
 				if (error) callback(error)
 				else callback(null, result)
 			});
@@ -98,11 +98,11 @@ AppUsageHandler.prototype.addAppRecord = function(_appInfo, callback) {
  * @param {function} callback function
  * @api public
  */
-AppUsageHandler.prototype.saveRecord = function(_appInfo, callback) {
-	this.getCollection(function(error, appcollection) {
+AppUsageHandler.prototype.saveRecord = function (_appInfo, callback) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			appcollection.save(_appInfo, function(error, result) {
+			appcollection.save(_appInfo, function (error, result) {
 				if (error) callback(error)
 				else callback(null, result)
 			});
@@ -117,15 +117,15 @@ AppUsageHandler.prototype.saveRecord = function(_appInfo, callback) {
  * @param {function} callback function
  * @api public
  */
-AppUsageHandler.prototype.appTrends = function(duration, callback) {
+AppUsageHandler.prototype.appTrends = function (duration, callback) {
 	var packagesToIgnore = config.ignore_packages;
-	this.getCollection(function(error, appcollection) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			var map = function() {
+			var map = function () {
 					emit(this.package_name, this.active_time)
 				};
-			var reduce = function(key, values) {
+			var reduce = function (key, values) {
 					return Array.sum(values);
 				};
 			appcollection.mapReduce(map, reduce, {
@@ -140,7 +140,7 @@ AppUsageHandler.prototype.appTrends = function(duration, callback) {
 						$gt: duration
 					}
 				}
-			}, function(error, result) {
+			}, function (error, result) {
 				if (error) callback(error)
 				else callback(null, result)
 			});
@@ -154,15 +154,15 @@ AppUsageHandler.prototype.appTrends = function(duration, callback) {
  * @param {function} callback function
  * @api public
  */
-AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude, _longitude, callback) {
+AppUsageHandler.prototype.appTrendsInArea = function (duration, _latitude, _longitude, callback) {
 	var packagesToIgnore = config.ignore_packages;
-	this.getCollection(function(error, appcollection) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			var map = function() {
+			var map = function () {
 					emit(this.package_name, this.active_time)
 				};
-			var reduce = function(key, values) {
+			var reduce = function (key, values) {
 					return Array.sum(values);
 				};
 			appcollection.mapReduce(map, reduce, {
@@ -183,7 +183,7 @@ AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude, _longi
 						}
 					}
 				}
-			}, function(error, result) {
+			}, function (error, result) {
 				console.log('- %s', error);
 				if (error) callback(error)
 				else callback(null, result)
@@ -197,14 +197,14 @@ AppUsageHandler.prototype.appTrendsInArea = function(duration, _latitude, _longi
  * @param {function} callback function
  * @api public
  */
-AppInfoHandler.prototype.AppInformation = function(callback) {
-	this.getCollection(function(error, appcollection) {
+AppInfoHandler.prototype.AppInformation = function (callback) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
 			appcollection.find({}, {
 				package_name: 1,
 				_id: 0
-			}).toArray(function(error, results) {
+			}).toArray(function (error, results) {
 				if (error) callback(error)
 				else callback(null, results)
 			});
@@ -218,8 +218,8 @@ AppInfoHandler.prototype.AppInformation = function(callback) {
  * @param {function} callback function
  * @api public
  */
-AppInfoHandler.prototype.AppInformationFor = function(appList, callback) {
-	this.getCollection(function(error, appcollection) {
+AppInfoHandler.prototype.AppInformationFor = function (appList, callback) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
 			appcollection.find({
@@ -227,7 +227,7 @@ AppInfoHandler.prototype.AppInformationFor = function(appList, callback) {
 					$in: appList,
 					$exists: true
 				}
-			}).toArray(function(error, results) {
+			}).toArray(function (error, results) {
 				if (error) callback(error)
 				else callback(null, results)
 			});
@@ -240,11 +240,11 @@ AppInfoHandler.prototype.AppInformationFor = function(appList, callback) {
  * @param {function} callback function
  * @api public
  */
-AppInfoHandler.prototype.appStoreInfo = function(appInfo, callback) {
-	this.getCollection(function(error, appcollection) {
+AppInfoHandler.prototype.appStoreInfo = function (appInfo, callback) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			appcollection.insert(appInfo, function(error, results) {
+			appcollection.insert(appInfo, function (error, results) {
 				if (error) callback(error)
 				else callback(null, results)
 			});
@@ -252,16 +252,16 @@ AppInfoHandler.prototype.appStoreInfo = function(appInfo, callback) {
 	});
 };
 
-AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, timespan, callback) {
+AppUsageHandler.prototype.appTrendsDuringHours = function (duration, startHour, timespan, callback) {
 	var packagesToIgnore = config.ignore_packages;
-	
-	this.getCollection(function(error, appcollection) {
+
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			var map = function() {
+			var map = function () {
 					emit(this.package_name, this.active_time)
 				};
-			var reduce = function(key, values) {
+			var reduce = function (key, values) {
 					return Array.sum(values);
 				};
 			appcollection.mapReduce(map, reduce, {
@@ -279,10 +279,10 @@ AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, t
 						$gte: startHour
 					},
 					start_minute_day: {
-						$lt: startHour+timespan
+						$lt: startHour + timespan
 					}
 				}
-			}, function(error, result) {
+			}, function (error, result) {
 				console.log('- %s', error);
 				if (error) callback(error)
 				else callback(null, result)
@@ -299,15 +299,15 @@ AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, t
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-AppUsageHandler.prototype.appTrendsDuringHoursAtLocation = function(duration, startHour, timespan, _latitude, _longitude, callback) {
+AppUsageHandler.prototype.appTrendsDuringHoursAtLocation = function (duration, startHour, timespan, _latitude, _longitude, callback) {
 	var packagesToIgnore = config.ignore_packages;
-	this.getCollection(function(error, appcollection) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			var map = function() {
+			var map = function () {
 					emit(this.package_name, this.active_time)
 				};
-			var reduce = function(key, values) {
+			var reduce = function (key, values) {
 					return Array.sum(values);
 				};
 			appcollection.mapReduce(map, reduce, {
@@ -325,7 +325,7 @@ AppUsageHandler.prototype.appTrendsDuringHoursAtLocation = function(duration, st
 						$gte: startHour
 					},
 					start_minute_day: {
-						$lt: startHour+timespan
+						$lt: startHour + timespan
 					},
 					position: {
 						$geoWithin: {
@@ -334,7 +334,7 @@ AppUsageHandler.prototype.appTrendsDuringHoursAtLocation = function(duration, st
 						}
 					}
 				}
-			}, function(error, result) {
+			}, function (error, result) {
 				console.log('- %s', error);
 				if (error) callback(error)
 				else callback(null, result)
@@ -351,16 +351,16 @@ AppUsageHandler.prototype.appTrendsDuringHoursAtLocation = function(duration, st
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, timespan, callback) {
+AppUsageHandler.prototype.appTrendsDuringHours = function (duration, startHour, timespan, callback) {
 	var packagesToIgnore = config.ignore_packages;
-	
-	this.getCollection(function(error, appcollection) {
+
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			var map = function() {
+			var map = function () {
 					emit(this.package_name, this.active_time)
 				};
-			var reduce = function(key, values) {
+			var reduce = function (key, values) {
 					return Array.sum(values);
 				};
 			appcollection.mapReduce(map, reduce, {
@@ -378,10 +378,10 @@ AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, t
 						$gte: startHour
 					},
 					start_minute_day: {
-						$lt: startHour+timespan
+						$lt: startHour + timespan
 					}
 				}
-			}, function(error, result) {
+			}, function (error, result) {
 				console.log('- %s', error);
 				if (error) callback(error)
 				else callback(null, result)
@@ -403,18 +403,20 @@ AppUsageHandler.prototype.appTrendsDuringHours = function(duration, startHour, t
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-AppUsageHandler.prototype.findAllReleventRecordsForUser = function(_userId, _duration, _endDuration, callback) {
-var packagesToIgnore = config.ignore_packages;
-	this.getCollection(function(error, appcollection) {
+AppUsageHandler.prototype.findAllReleventRecordsForUser = function (_userId, _duration, _endDuration, callback) {
+	var packagesToIgnore = config.ignore_packages;
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
 			appcollection.find({
-				
+
 				user_id: _userId,
-				"position":{$ne:[0,0]},
+				"position": {
+					$ne: [0, 0]
+				},
 				package_name: {
-						$nin: packagesToIgnore
-					},
+					$nin: packagesToIgnore
+				},
 				start_time: {
 					$gt: _duration
 				},
@@ -422,7 +424,10 @@ var packagesToIgnore = config.ignore_packages;
 					$lt: _endDuration
 				}
 
-			},{position:1,package_name:1}).toArray(function(error_correction, results) {
+			}, {
+				position: 1,
+				package_name: 1
+			}).toArray(function (error_correction, results) {
 				if (error_correction) callback(error_correction)
 				else callback(null, results)
 			});
@@ -437,21 +442,21 @@ var packagesToIgnore = config.ignore_packages;
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-AppUsageHandler.prototype.findAllReleventRecordsForAll = function(_duration, _endDuration, callback) {
+AppUsageHandler.prototype.findAllReleventRecordsForAll = function (_duration, _endDuration, callback) {
 	var packagesToIgnore = config.ignore_packages;
-	this.getCollection(function(error, appcollection) {
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-			var map = function() {
+			var map = function () {
 					emit(this.user_id, {
 						count: 1,
 						active_time: this.active_time
 					})
 				};
-			var reduce = function(key, values) {
+			var reduce = function (key, values) {
 					var count = 0;
 					var totaltime = 0;
-					values.forEach(function(v) {
+					values.forEach(function (v) {
 						count += v['count'];
 						totaltime += v['active_time']
 					});
@@ -475,7 +480,7 @@ AppUsageHandler.prototype.findAllReleventRecordsForAll = function(_duration, _en
 						$lt: _endDuration
 					}
 				}
-			}, function(error, result) {
+			}, function (error, result) {
 				console.log('- %s', error);
 				if (error) callback(error)
 				else callback(null, result)
@@ -500,18 +505,18 @@ AppUsageHandler.prototype.findAllReleventRecordsForAll = function(_duration, _en
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-AppUsageHandler.prototype.findClusteredLocationForUser = function(_userId, _duration, _endDuration, callback) {
+AppUsageHandler.prototype.findClusteredLocationForUser = function (_userId, _duration, _endDuration, callback) {
 	var packagesToIgnore = config.ignore_packages;
-	
-	this.getCollection(function(error, appcollection) {
+
+	this.getCollection(function (error, appcollection) {
 		if (error) callback(error)
 		else {
-		
-		
-			var map = function() {
+
+
+			var map = function () {
 					emit(this.geohashZ1, 1)
 				};
-			var reduce = function(key, values) {
+			var reduce = function (key, values) {
 					return Array.sum(values);
 				};
 			appcollection.mapReduce(map, reduce, {
@@ -523,18 +528,75 @@ AppUsageHandler.prototype.findClusteredLocationForUser = function(_userId, _dura
 					package_name: {
 						$nin: packagesToIgnore
 					},
-				start_time: {
-					$gt: _duration
-				},
-				end_time: {
-					$lt: _endDuration
-				},
-				geohash: {
-					$exists: true
+					start_time: {
+						$gt: _duration
+					},
+					end_time: {
+						$lt: _endDuration
+					},
+					geohash: {
+						$exists: true
+					}
+
 				}
-				
+			}, function (error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+
+/**
+ * fetches a collection of app usage for a particular usage for a particular duration.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.findClusteredLocationForUserDuringHours = function (_userId, _duration, _endDuration, startHour, timespan, callback) {
+	var packagesToIgnore = config.ignore_packages;
+
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+
+
+			var map = function () {
+					emit(this.geohashZ1, 1)
+				};
+			var reduce = function (key, values) {
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+					user_id: _userId,
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					start_time: {
+						$gt: _duration
+					},
+					end_time: {
+						$lt: _endDuration
+					},
+					geohash: {
+						$exists: true
+					},
+					start_minute_day: {
+						$gte: startHour
+					},
+					start_minute_day: {
+						$lt: startHour + timespan
+					}
+
 				}
-			}, function(error, result) {
+			}, function (error, result) {
 				console.log('- %s', error);
 				if (error) callback(error)
 				else callback(null, result)

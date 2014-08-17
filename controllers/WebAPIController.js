@@ -356,7 +356,7 @@ exports.webDuringHoursAtLocation = function (req, res) {
 /**
  * Here be dragons
  */
- 
+
 
 /**
  * API Call - Updates records with geohashtags.
@@ -366,45 +366,47 @@ exports.webDuringHoursAtLocation = function (req, res) {
  */
 exports.updateAll = function (req, res) {
 
-	appCollection.findAll( function (error_info, result) {
-			if (result) {
-				var modifiedRecords = [];
-				for(n in result){
-					var coordinate = result[n].position;
-					var lat = coordinate[0];
-					var lng = coordinate[1];
-					if(lat!=0 || lng!=0){
-					
-						var hash = geohash.encode(lat, lng);
-						result[n].geohash = hash;
-						result[n].geohashZ1 =hash.substring(0, hash.length-1);
-						result[n].geohashZ2 =hash.substring(0, hash.length-2);
-						result[n].geohashZ3 =hash.substring(0, hash.length-3);
-						 
-						modifiedRecords.push(result[n]);
-					}
+	appCollection.findAll(function (error_info, result) {
+		if (result) {
+			var modifiedRecords = [];
+			for (n in result) {
+				var coordinate = result[n].position;
+				var lat = coordinate[0];
+				var lng = coordinate[1];
+				if (lat != 0 || lng != 0) {
+
+					var hash = geohash.encode(lat, lng);
+					result[n].geohash = hash;
+					result[n].geohashZ1 = hash.substring(0, hash.length - 1);
+					result[n].geohashZ2 = hash.substring(0, hash.length - 2);
+					result[n].geohashZ3 = hash.substring(0, hash.length - 3);
+
+					modifiedRecords.push(result[n]);
 				}
-				
-				var j=0;
-				var total = modifiedRecords.length;
-				for(i in modifiedRecords){
-				appCollection.saveRecord(modifiedRecords[i], function(err, success){
+			}
+
+			var j = 0;
+			var total = modifiedRecords.length;
+			for (i in modifiedRecords) {
+				appCollection.saveRecord(modifiedRecords[i], function (err, success) {
 					j++;
-					console.log("Updated Item - %d/%d",j,total);
-					if(total<(j+1)){
-						return res.json({"count":result.length});
+					console.log("Updated Item - %d/%d", j, total);
+					if (total < (j + 1)) {
+						return res.json({
+							"count": result.length
+						});
 					}
-				});
-				}
-				
-			}else if (!error_info) {
-				
-			} else {
-				res.statusCode = 500;
-				return res.json({
-					error: "Invalid request."
 				});
 			}
-		});
-	
+
+		} else if (!error_info) {
+
+		} else {
+			res.statusCode = 500;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
+
 }
