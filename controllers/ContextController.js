@@ -1,6 +1,8 @@
 var config = require('../local.config');
 var validator = require('validator');
 var user = require('./UserController');
+var geohash = require('ngeohash');
+
 var ContextInfoHandler = require('../model/ContextInfoHandler').ContextInfoHandler;
 var contextInfoCollection = null;
 /**
