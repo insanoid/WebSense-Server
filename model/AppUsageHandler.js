@@ -512,7 +512,7 @@ AppUsageHandler.prototype.findAllReleventRecordsForAll = function (_duration, _e
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-AppUsageHandler.prototype.findClusteredLocationForUser = function (_userId, _duration, _endDuration, callback) {
+AppUsageHandler.prototype.findClusteredLocationForUser = function (_userId, _duration, _endDuration, clusterLevel, callback) {
 	var packagesToIgnore = config.ignore_packages;
 
 	this.getCollection(function (error, appcollection) {
@@ -521,7 +521,7 @@ AppUsageHandler.prototype.findClusteredLocationForUser = function (_userId, _dur
 
 
 			var map = function () {
-					emit(this.geohashZ1, 1)
+					emit(this.geohashZ4,  this.active_time)
 				};
 			var reduce = function (key, values) {
 					return Array.sum(values);
@@ -562,7 +562,7 @@ AppUsageHandler.prototype.findClusteredLocationForUser = function (_userId, _dur
  * @return {Collection} the entire collection for app usage.
  * @api public
  */
-AppUsageHandler.prototype.findClusteredLocationForUserDuringHours = function (_userId, _duration, _endDuration, startHour, timespan, callback) {
+AppUsageHandler.prototype.findClusteredLocationForUserDuringHours = function (_userId, _duration, _endDuration, startHour, timespan, clusterLevel, callback) {
 	var packagesToIgnore = config.ignore_packages;
 
 	this.getCollection(function (error, appcollection) {
@@ -571,9 +571,22 @@ AppUsageHandler.prototype.findClusteredLocationForUserDuringHours = function (_u
 
 
 			var map = function () {
-					emit(this.geohashZ1, 1)
+					emit(this.geohashZ4, {count:1,time:this.active_time,start_minute_day:this.start_minute_day})
 				};
 			var reduce = function (key, values) {
+			
+					var reducedVal = { count: 0, time: 0, start_minute_day:0 };
+
+                     for (var idx = 0; idx < values.length; idx++) {
+                         reducedVal.count += values[idx].count;
+                         reducedVal.time += values[idx].time;
+                         reducedVal.start_minute_day += values[idx].start_minute_day;
+                     }
+
+                     reducedVal.avg = reducedVal.start_minute_day/reducedVal.count;  
+                     return reducedVal;
+                     
+				
 					return Array.sum(values);
 				};
 			appcollection.mapReduce(map, reduce, {

@@ -19,6 +19,12 @@ exports.geocluster = function(req, res){
   res.render('geocluster', { title: 'Websense: Geo-Cluster Algorithm', email:req.param('email')});
 };
 
+
+exports.userprocess = function(req, res){
+  res.render('userprocess', { title: 'Websense: user Process'});
+};
+
+
 exports.eula = function(req, res){
   res.render('eula', { title: 'WebSense Android App: EULA/Concent' });
 };

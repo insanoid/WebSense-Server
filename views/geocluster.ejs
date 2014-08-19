@@ -24,7 +24,7 @@
                 mapOptions);
 
             var markers = [];
-            $.getJSON("debug/cluster?startTime=0&endTime=" + Math.floor(Date.now() / 1000) + "&email=<%= email %>", function(data) {
+            $.getJSON("debug/timeBasedCluster?startTime=0&endTime=" + Math.floor(Date.now() / 1000) + "&email=<%= email %>&start_time=32400&timespan=32400", function(data) {
 
                 for (var i = 0; i < data.length; ++i) {
                 if(data[i].position[0]!=0 || data[i].position[1]!=0)

@@ -59,6 +59,7 @@ if ('development' == app.get('env')) {
 
 app.get('/', routes.index);
 app.get('/eula', routes.eula);
+
 app.post('/user/create', user.create);
 app.post('/user/authenticate', user.authenticate);
 
@@ -80,6 +81,8 @@ app.get('/app/userrecords/detailed', appController.getUserAppUsageData);
 app.get('/cluster', routes.cluster);
 app.get('/heatmap', routes.heatmap);
 app.get('/geocluster', routes.geocluster);
+app.get('/userprocess', routes.userprocess);
+
 app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.webDuringHoursAtLocation);
 
 
@@ -94,6 +97,7 @@ app.get('/api/app/trends/time/localised/:duration/:start_time/:timespan/:lat/:ln
 app.get('/debug/app/update', appAPI.updateAll);
 app.get('/debug/context/update', contextInfo.updateAllContext);
 app.get('/debug/cluster', appController.getUserGeoCluster);
+app.get('/debug/timeBasedCluster', appController.getUserGeoClusterForTimeRange);
 
 //WEB information
 app.get('/api/web/trends/location/:duration/:lat/:lng/', appAPI.webNearby);

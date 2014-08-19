@@ -380,7 +380,8 @@ exports.updateAll = function (req, res) {
 					result[n].geohashZ1 = hash.substring(0, hash.length - 1);
 					result[n].geohashZ2 = hash.substring(0, hash.length - 2);
 					result[n].geohashZ3 = hash.substring(0, hash.length - 3);
-
+					result[n].geohashZ4 = hash.substring(0, hash.length - 4);
+					result[n].geohashZ5 = hash.substring(0, hash.length - 5);
 					modifiedRecords.push(result[n]);
 				}
 			}

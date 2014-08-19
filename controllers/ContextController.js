@@ -35,34 +35,36 @@ exports.pushContextInfo = function (req, res) {
 				var now = new Date();
 				console.log("[%s] - [%s]:   %j", now.toString(), userObj.username, data.context_info.length);
 				for (n in data.context_info) {
-					
-					var contextTxt; 
+
+					var contextTxt;
 					try {
 						contextTxt = JSON.parse(data.context_info[n].content);
 					} catch (e) {
 						contextTxt = null;
 					}
-					
+
 					var content_string = data.context_info[n].content;
-					
-					if (!(content_string == "{}" || content_string == "[]") && contextTxt!=null) {
+
+					if (!(content_string == "{}" || content_string == "[]") && contextTxt != null) {
 						data.context_info[n].position = JSON.parse("[" + data.context_info[n].position + "]");
 						data.context_info[n].content = JSON.parse(data.context_info[n].content);
 						data.context_info[n].user_id = userObj._id;
-						
+
 						var coordinate = data.context_info[n].position;
 						var lat = coordinate[0];
 						var lng = coordinate[1];
-					
+
 						if (lat != 0 || lng != 0) {
-						
+
 							var hash = geohash.encode(lat, lng);
 							data.context_info[n].geohash = hash;
 							data.context_info[n].geohashZ1 = hash.substring(0, hash.length - 1);
 							data.context_info[n].geohashZ2 = hash.substring(0, hash.length - 2);
 							data.context_info[n].geohashZ3 = hash.substring(0, hash.length - 3);
+							data.context_info[n].geohashZ4 = hash.substring(0, hash.length - 4);
+							data.context_info[n].geohashZ5 = hash.substring(0, hash.length - 5);
 						}
-						
+
 					}
 				}
 				contextInfoCollection.addContextRecord(data.context_info, function (error_info, result) {
@@ -71,7 +73,7 @@ exports.pushContextInfo = function (req, res) {
 							success: true
 						});
 					} else {
-						
+
 						res.statusCode = 501;
 						return res.json({
 							error: "Invalid request."
@@ -168,11 +170,20 @@ exports.updateAllContext = function (req, res) {
 					result[n].geohashZ1 = hash.substring(0, hash.length - 1);
 					result[n].geohashZ2 = hash.substring(0, hash.length - 2);
 					result[n].geohashZ3 = hash.substring(0, hash.length - 3);
-
+					result[n].geohashZ4 = hash.substring(0, hash.length - 4);
+					result[n].geohashZ5 = hash.substring(0, hash.length - 5);
 					modifiedRecords.push(result[n]);
 				}
 			}
 
+			contextInfoCollection.saveRecord(modifiedRecords, function (err, success) {
+				console.log("Updated Item - %d/%d", j, total);
+				return res.json({
+					"count": result.length,
+					err: err
+				});
+			});
+/*
 			var j = 0;
 			var total = modifiedRecords.length;
 			for (i in modifiedRecords) {
@@ -186,6 +197,8 @@ exports.updateAllContext = function (req, res) {
 					}
 				});
 			}
+			
+			*/
 
 		} else if (!error_info) {
 
@@ -206,6 +219,7 @@ exports.updateAllContext = function (req, res) {
  * @return {Boolean} if valid user or not
  * @api private
  */
+
 function tokenValidator(token, callback) {
 	if (token) {
 		user.validateSession(token, function (user, error) {
@@ -228,6 +242,7 @@ function tokenValidator(token, callback) {
  * @return {Object} user record
  * @api private
  */
+
 function getUserForEmail(email, callback) {
 	console.log('user: %j', email);
 	if (email) {
