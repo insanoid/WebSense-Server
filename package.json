@@ -16,6 +16,7 @@
     "cheerio": "latest",
     "mongodb-incremental-mapreduce": "latest",
     "geohash": "0.0.1",
-    "ngeohash": "~0.6.0"
+    "ngeohash": "~0.6.0",
+    "foursquarevenues": "~0.1.0"
   }
 }

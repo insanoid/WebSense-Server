@@ -17,20 +17,17 @@
         }
     </style>
     <script type="text/javascript">
-        var userData = null;
         var percent = 0;
         var currentCount = 0;
-        var totalSuccess = 0;
-        var totalFailure = 0;
 
-        $(document).ready(function () {
+        $(document).ready(function() {
             $("#collapseOne").collapse('hide');
             loadUsers();
         });
 
 
         function loadUsers() {
-            $.getJSON("/users", function (res) {
+            $.getJSON("/users", function(res) {
 
                 var data = res.users;
                 currentCount = data.length;
@@ -39,54 +36,66 @@
 
                 $("#progressinfocontainer").append("<div class='alert alert-warning' role='alert' id='userinfo'>Total Users: " + data.length + " Users<br/>" + progressBar + "</div>");
                 for (var i = 0; i < data.length; ++i) {
-                    $("#collapseOne").append("<div class='alert alert-info' role='alert' id=" + data[i]._id + "> " + data[i].username + "</div>");
-                    geocluster(data[i]);
+                    if (data[i].hasOwnProperty('loc_tag')) {
+                        if (Object.keys(data[i].loc_tag).length > 0) {
+
+                            $("#collapseOne").append("<div class='alert alert-info' role='alert' id=" + data[i]._id + "> " + data[i].username + "</div>");
+                            if (data[i].loc_tag.hasOwnProperty('H')) {
+                                updatePoint(data[i]._id, 'H', data[i].loc_tag.H);
+                            } else {
+                                checkPercentage();
+                            }
+
+                            if (data[i].loc_tag.hasOwnProperty('O')) {
+                                updatePoint(data[i]._id, 'O', data[i].loc_tag.O);
+                            } else {
+                                checkPercentage();
+                            }
+
+                        } else {
+                            checkPercentage();
+                            checkPercentage();
+                        }
+
+                    } else {
+                        checkPercentage();
+                        checkPercentage();
+                    }
 
                 }
 
             });
         }
 
-        function geocluster(dataObj) {
-            var currentId = dataObj._id;
-            $.getJSON("debug/timeBasedCluster?startTime=0&endTime=" + Math.floor(Date.now() / 1000) + "&email=" + dataObj.username + "&start_time=32400&timespan=32400", function (datax) {
 
-                percent += (1 / currentCount) * 100;
-
+        function updatePoint(id, key, hash) {
+            $.getJSON("/debug/tag/" + id + "/" + hash + "/" + key, function(datax) {
                 $("#infoloading").css("width", percent + "%");
-                if (datax.length > 1) {
-                    totalSuccess++;
-                    $("#" + currentId).removeClass('alert-info');
-                    $("#" + currentId).addClass('alert-success');
-                    $("<p>" + datax[0].position + "</p>").appendTo("#" + currentId);
-                    $("<p>" + datax[1].position + "</p>").appendTo("#" + currentId);
-                } else {
-                    totalFailure++;
-                    $("#" + currentId).removeClass('alert-info');
-                    $("#" + currentId).addClass('alert-danger');
-                }
-
-                if (Math.round(percent) >= 100) {
-
-                    $("<b>Success: " + totalSuccess + "</b>" + "<br/><b>Failure: " + totalFailure + "</b>").appendTo("#userinfo");
-
-                    $(".progress").css("display", "none");
-                    $("#userinfo").removeClass('alert-warning');
-                    $("#userinfo").addClass('alert-success');
-                }
+                $("<p><b>Updated " + key + ": </b> " + datax.count + "</p>").appendTo("#" + id);
+                checkPercentage();
 
             });
+        }
 
+        function checkPercentage() {
 
+            percent += (1 / (2 * currentCount)) * 100;
+            console.log('percent   - ' + percent);
+            $("#infoloading").css("width", percent + "%");
+
+            if (Math.round(percent) >= 100) {
+                $(".progress").css("display", "none");
+                $("#userinfo").removeClass('alert-warning');
+                $("#userinfo").addClass('alert-success');
+            }
         }
     </script>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
     <div class="container">
-        <h1>Find & Update L1/L2</h1>
-        <p>Processing user information (Corn Job)</p>
+        <h1>Tag App Usage Data</h1>
         <div id="progressinfocontainer"></div>
         <div class="panel-group" id="accordion">
             <div class="panel panel-default">
@@ -96,14 +105,13 @@
 						</h4>
                 </div>
                 <div id="collapseOne" class="panel-collapse collapse in" style="padding:20px">
-
                 </div>
             </div>
         </div>
     </div>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
+<script src="../js/bootstrap.min.js"></script>
 </body>
 
 </html>

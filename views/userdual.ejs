@@ -40,52 +40,119 @@
                 $("#progressinfocontainer").append("<div class='alert alert-warning' role='alert' id='userinfo'>Total Users: " + data.length + " Users<br/>" + progressBar + "</div>");
                 for (var i = 0; i < data.length; ++i) {
                     $("#collapseOne").append("<div class='alert alert-info' role='alert' id=" + data[i]._id + "> " + data[i].username + "</div>");
-                    geocluster(data[i]);
+                    homePoint(data[i]);
 
                 }
 
             });
         }
 
-        function geocluster(dataObj) {
+        function homePoint(dataObj) {
             var currentId = dataObj._id;
-            $.getJSON("debug/timeBasedCluster?startTime=0&endTime=" + Math.floor(Date.now() / 1000) + "&email=" + dataObj.username + "&start_time=32400&timespan=32400", function (datax) {
-
-                percent += (1 / currentCount) * 100;
+            $.getJSON("debug/timeBasedCluster?startTime=0&endTime=" + Math.floor(Date.now() / 1000) + "&email=" + dataObj.username + "&start_time=0&timespan=32400", function (datax) {
 
                 $("#infoloading").css("width", percent + "%");
+                if (datax.length > 1) {
+                    $("<p><b>Home: </b> " + datax[0].position + "</p>").appendTo("#" + currentId);
+                    officePoint(dataObj, datax[0]._id);
+                }else{
+                	officePoint(dataObj, null);
+                }
+                
+                checkPercentage();
+                
+            });
+        }
+        
+        function officePoint(dataObj, point) {
+            var currentId = dataObj._id;
+            $.getJSON("debug/timeBasedCluster?startTime=0&endTime=" + Math.floor(Date.now() / 1000) + "&email=" + dataObj.username + "&start_time=32400&timespan=32400", function (datax) {
+            
                 if (datax.length > 1) {
                     totalSuccess++;
                     $("#" + currentId).removeClass('alert-info');
                     $("#" + currentId).addClass('alert-success');
-                    $("<p>" + datax[0].position + "</p>").appendTo("#" + currentId);
-                    $("<p>" + datax[1].position + "</p>").appendTo("#" + currentId);
+                    if(point!=null){
+                    	for(var idx=0;idx<datax.length;idx++){
+	                    		if(datax[idx]._id!=point){
+		                    		datax[0].position = datax[idx].position;
+		                    		datax[0]._id = datax[idx]._id;
+		                    		break;
+		                    	}
+                    	}
+                    }
+                    
+                    $("<p><b>Office: </b>" + datax[0].position + "</p>").appendTo("#" + currentId);
+                  
                 } else {
                     totalFailure++;
                     $("#" + currentId).removeClass('alert-info');
                     $("#" + currentId).addClass('alert-danger');
                 }
 
-                if (Math.round(percent) >= 100) {
+                var locationTag = {};
+                if(point!=null){
+	                locationTag.H = point;
+                }
+                
+                if(datax.length>0){
+	                locationTag.O = datax[0]._id;
+                }	
+                console.log("---> %j",locationTag);
+                if(Object.keys(locationTag).length){
+               	 saveUserInfo(currentId, locationTag);
+                }else{
+	                checkPercentage();
+                }
+                checkPercentage();
 
+            });
+        }
+        
+        function saveUserInfo(userId, locObject) {
+	         $.ajax({
+                type: "POST",
+                url: "user/update/"+userId,
+                data: locObject,
+                dataType: "json",
+               
+                //if received a response from the server
+                success: function( data, textStatus, jqXHR) {
+                      console.log("Saved")
+                      checkPercentage();
+                },
+               
+                //If there was no resonse from the server
+                error: function(jqXHR, textStatus, errorThrown){
+                      console.log("failed")
+                      checkPercentage();
+                }
+     
+            });  
+        }
+        
+        function checkPercentage() {
+        
+	         percent += (1 / (3 * currentCount)) * 100;
+                $("#infoloading").css("width", percent + "%");
+                
+	        if (Math.round(percent) >= 100) {
                     $("<b>Success: " + totalSuccess + "</b>" + "<br/><b>Failure: " + totalFailure + "</b>").appendTo("#userinfo");
 
                     $(".progress").css("display", "none");
                     $("#userinfo").removeClass('alert-warning');
                     $("#userinfo").addClass('alert-success');
                 }
-
-            });
-
-
         }
+        
+        
     </script>
     <link href="css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
     <div class="container">
-        <h1>Find & Update L1/L2</h1>
+        <h1>Process User Information</h1>
         <p>Processing user information (Corn Job)</p>
         <div id="progressinfocontainer"></div>
         <div class="panel-group" id="accordion">

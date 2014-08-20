@@ -176,14 +176,6 @@ exports.updateAllContext = function (req, res) {
 				}
 			}
 
-			contextInfoCollection.saveRecord(modifiedRecords, function (err, success) {
-				console.log("Updated Item - %d/%d", j, total);
-				return res.json({
-					"count": result.length,
-					err: err
-				});
-			});
-/*
 			var j = 0;
 			var total = modifiedRecords.length;
 			for (i in modifiedRecords) {
@@ -197,8 +189,6 @@ exports.updateAllContext = function (req, res) {
 					}
 				});
 			}
-			
-			*/
 
 		} else if (!error_info) {
 

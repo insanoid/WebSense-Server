@@ -24,6 +24,15 @@ exports.userprocess = function(req, res){
   res.render('userprocess', { title: 'Websense: user Process'});
 };
 
+exports.userdual = function(req, res){
+  res.render('userdual', { title: 'Websense: L1/L2'});
+};
+
+exports.usertag = function(req, res){
+  res.render('process_user_appInfo', { title: 'Websense: Tag'});
+};
+
+
 
 exports.eula = function(req, res){
   res.render('eula', { title: 'WebSense Android App: EULA/Concent' });

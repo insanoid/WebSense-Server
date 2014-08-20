@@ -130,9 +130,11 @@ UsersCollection.prototype.updateUserObject = function(_user_id, _user, callback)
 	this.getCollection(function(error, usercollection) {
 		if (error) callback(error)
 		else {
+			var strObj = new String(_user_id);
 			usercollection.update({
-				_id: _user_id
+				_id: ObjectID.createFromHexString(strObj)
 			}, _user, function(error, result) {
+			
 				if (error) callback(error)
 				else callback(null, result)
 			});

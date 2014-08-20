@@ -521,7 +521,7 @@ AppUsageHandler.prototype.findClusteredLocationForUser = function (_userId, _dur
 
 
 			var map = function () {
-					emit(this.geohashZ4,  this.active_time)
+					emit(this.geohashZ3,  this.active_time)
 				};
 			var reduce = function (key, values) {
 					return Array.sum(values);
@@ -571,7 +571,7 @@ AppUsageHandler.prototype.findClusteredLocationForUserDuringHours = function (_u
 
 
 			var map = function () {
-					emit(this.geohashZ4, {count:1,time:this.active_time,start_minute_day:this.start_minute_day})
+					emit(this.geohashZ3, {count:1,time:this.active_time,start_minute_day:this.start_minute_day})
 				};
 			var reduce = function (key, values) {
 			
@@ -624,6 +624,33 @@ AppUsageHandler.prototype.findClusteredLocationForUserDuringHours = function (_u
 	});
 };
 
+
+/**
+ * Updates the app information for the user.
+ *
+ * @param {String} userId
+ * @param {String} geohash level 3
+ * @param {String} Tag information
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.tagAppDataForUser = function(_user_id, geohash, tag, callback) {
+	this.getCollection(function(error, appCollection) {
+		if (error) callback(error)
+		else {
+			var strObj = new String(_user_id);
+			appCollection.update({
+				user_id: ObjectID.createFromHexString(strObj),
+				geohashZ3 : geohash
+			}, {$set :{"loc_tag":[tag]}},{multi:true}, function(error, result) {
+			
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+
+	});
+};
 
 
 exports.AppInfoHandler = AppInfoHandler;

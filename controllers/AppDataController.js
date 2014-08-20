@@ -415,6 +415,40 @@ exports.getUserGeoClusterForTimeRange = function (req, res) {
 
 
 /**
+ * API Call - processes user's data and analyses geo spatial clusters.
+ *
+ * @param {String} email_address
+ * @param {long} start_duration
+ * @param {end} end_duration
+ * @return {HTTPRESPONSE} response.
+ * @api public
+ */
+exports.updateAppTagsForUserInRange = function (req, res) {
+
+	var userId = req.param('userId');
+	var geohash = req.param('geohash');
+	var tag = req.param('tag');
+	
+	appCollection.tagAppDataForUser(userId, geohash, tag, function (error_info, result) {
+				if (!error_info) {
+
+					res.statusCode = 200;
+					return res.json({
+						count: result
+					});
+				} else {
+
+					res.statusCode = 501;
+					return res.json({
+						error: "Invalid request."
+					});
+				}
+			});		
+}
+
+
+
+/**
  * API Call - fetches analyltics data for all users.
  *
  * @param {long} start_duration
@@ -648,7 +682,7 @@ function cleanURLString(str) {
 function tokenValidator(token, callback) {
 	if (token) {
 		user.validateSession(token, function (user, error) {
-			console.log('user: %j', user);
+			console.log('user: %s', user);
 			if (user) {
 				callback(true, user);
 			} else {
@@ -673,7 +707,7 @@ function getUserForEmail(email, callback) {
 	if (email) {
 
 		user.findUser(email, function (user, error) {
-			console.log('user Found: %j', user);
+			
 			if (user) {
 				callback(true, user);
 			} else {

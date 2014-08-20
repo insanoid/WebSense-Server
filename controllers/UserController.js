@@ -1,5 +1,7 @@
 var config = require('../local.config');
 var validator = require('validator');
+var ObjectID = require('mongodb').ObjectID;
+
 var UsersCollection = require('../model/UserHandler').UsersCollection;
 var usersCollection = null;
 /**
@@ -8,7 +10,7 @@ var usersCollection = null;
  * @param {DBConnection} already connected db connection.
  * @api public
  */
-exports.initDBConnection = function(_dbConn) {
+exports.initDBConnection = function (_dbConn) {
 	usersCollection = new UsersCollection(_dbConn);
 }
 /**
@@ -19,7 +21,7 @@ exports.initDBConnection = function(_dbConn) {
  * @return {HTTPRESPONSE} response.
  * @api public
  */
-exports.authenticate = function(req, res) {
+exports.authenticate = function (req, res) {
 	console.log((validator.isEmail(req.param('username'))) + " " + req.param('password') + " " + req.param('uuid') + " " + req.param('username'));
 	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('uuid')) {
 		res.statusCode = 400;
@@ -27,13 +29,13 @@ exports.authenticate = function(req, res) {
 			error: 'Require a valid username(email address), password and a device id.'
 		});
 	} else {
-		usersCollection.authenticateUser(req.param('username'), encryptPassword(req.param('password')), function(error_m, user) {
+		usersCollection.authenticateUser(req.param('username'), encryptPassword(req.param('password')), function (error_m, user) {
 			if (user) {
 				var resp = generateAuthenticateToken(user, req.param('uuid'));
 				var edit_user = resp[0];
 				var user_id = edit_user._id;
 				delete edit_user['_id'];
-				usersCollection.updateUserObject(user_id, edit_user, function(error, result) {
+				usersCollection.updateUserObject(user_id, edit_user, function (error, result) {
 					if (!error) {
 						return res.json({
 							auth_token: resp[1]
@@ -66,16 +68,16 @@ exports.authenticate = function(req, res) {
  * @return {HTTPRESPONSE} response.
  * @api public
  */
-exports.create = function(req, res) {
+exports.create = function (req, res) {
 	console.log(req.param('password') + " " + req.param('uuid') + " " + req.param('username') + " " + req.param('gender') + req.param('job_type') + " - >" + req.param('device_info'));
-	
+
 	if (!(validator.isEmail(req.param('username'))) || !req.param('password') || !req.param('job_type') || !req.param('uuid')) {
 		res.statusCode = 400;
 		return res.json({
 			error: 'Require a valid username, password, job_type.'
 		});
 	} else {
-		usersCollection.getUserForEmail(req.param('username'), function(error, user) {
+		usersCollection.getUserForEmail(req.param('username'), function (error, user) {
 			if (user) {
 				res.statusCode = 401;
 				return res.json({
@@ -85,7 +87,7 @@ exports.create = function(req, res) {
 				var user = createUser(
 				req.param('username'), encryptPassword(req.param('password')), req.param('uuid'), "UD", req.param('job_type'), req.param('device_info'));
 				var auth_key = user.device_info[0].auth_token;
-				usersCollection.addNewUser(user, function(error, result) {
+				usersCollection.addNewUser(user, function (error, result) {
 					if (!error) {
 						return res.json({
 							auth_token: auth_key
@@ -109,8 +111,8 @@ exports.create = function(req, res) {
  * @return {User} User object.
  * @api private
  */
-exports.findAll = function(req, res) {
-	usersCollection.findAll(function(error, users) {
+exports.findAll = function (req, res) {
+	usersCollection.findAll(function (error, users) {
 		if (users) {
 			res.statusCode = 200;
 			return res.json({
@@ -118,6 +120,22 @@ exports.findAll = function(req, res) {
 			});
 		}
 	});
+	
+ var foursquare = (require('foursquarevenues'))('BSJNYLLRYUPZIQNSD5XXOYZKK0UBGWWXFD31KEVHDGVHTQIU', 'XFOWWXQEKOHFMXVRSOBRACIA5OZUTZ5XMJZLKHZ1TXTPD4DI');
+
+    var params = {
+        "ll": "52.45147705078125,-1.9390869140625",
+        "radius":10,
+        "limit":1
+    };
+
+    foursquare.getVenues(params, function(error, venues) {
+        if (!error) {
+            console.log("%j",venues);
+        }
+    });
+
+
 }
 
 /**
@@ -126,11 +144,11 @@ exports.findAll = function(req, res) {
  * @return {User} User object.
  * @api private
  */
-exports.findUser = function(email ,callback) {
-	usersCollection.getUserForEmail(email, function(error, user) {
+exports.findUser = function (email, callback) {
+	usersCollection.getUserForEmail(email, function (error, user) {
 		if (user) {
 			callback(user);
-		}else{
+		} else {
 			callback(null);
 		}
 	});
@@ -147,11 +165,54 @@ exports.validateSession = function validateSession(_auth_key, callback) {
 	if (_auth_key == null) {
 		callback(null);
 	} else {
-		usersCollection.getUserForAuthToken(_auth_key, function(error, user) {
+		usersCollection.getUserForAuthToken(_auth_key, function (error, user) {
 			callback(user);
 		});
 	}
 }
+
+
+/**
+ * updates the user object
+ *
+ * @param {String} _auth_key
+ * @return {User} User object.
+ * @api private
+ */
+exports.updateUserObject = function validateSession(req, res) {
+
+
+	if (!req.param('userId')) {
+		res.statusCode = 400;
+		return res.json({
+			error: 'Require a valid userid.'
+		});
+	} else {
+
+		if (Object.keys(req.body).length > 0) {
+			usersCollection.updateUserObject(req.param('userId'), {
+				$set: {
+					"loc_tag": req.body
+				}
+			}, function (error, result) {
+			
+				if (!error) {
+					res.statusCode = 200;
+					return res.json({
+						done: true
+					});
+				} else {
+					res.statusCode = 500;
+					return res.json({
+						error: "An error occured while handling your request."
+					});
+				}
+			});
+		}
+	}
+}
+
+
 /**
  * Generates an user object.
  *
@@ -204,7 +265,7 @@ function generateAuthenticateToken(userObject, deviceId, deviceInfo) {
 		newToken = device.auth_token;
 		userObject.device_info = [device];
 	}
-	console.log('- New Auth = %s', newToken);
+	
 	return [userObject, newToken];
 }
 /**
@@ -222,7 +283,7 @@ function createNewDevice(deviceId, deviceInfo) {
 		uuid: deviceId,
 		last_logged_at: new Date()
 	}
-	console.log('- New Auth = %s', device.auth_token);
+	
 	return device;
 }
 /**
