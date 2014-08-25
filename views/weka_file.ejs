@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        <%= title %>
+    </title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+        .panel-title a {
+            display: block;
+            padding: 10px 15px;
+            margin: -10px -15px;
+        }
+    </style>
+    <script type="text/javascript">
+        var userData = null;
+        var percent = 0;
+        var currentCount = 0;
+        var totalSuccess = 0;
+        var totalFailure = 0;
+
+        $(document).ready(function () {
+            $("#collapseOne").collapse('hide');
+            loadUsers();
+        });
+
+
+        function loadUsers() {
+            $.getJSON("/users", function (res) {
+
+                var data = res.users;
+                currentCount = data.length;
+                
+                for (var i = 0; i < data.length; ++i) {
+                	var content = "<div class='alert alert-info' role='alert' id=" + data[i]._id + "> " + data[i].username;
+                	
+                	if(data[i].hasOwnProperty('loc_tag')==true){
+                	
+	                	if(data[i].loc_tag.hasOwnProperty('O')==true){
+		                	content = content+ "<br/><a href='/user/rawdata?userId="+data[i]._id+"&loc=O'>Office</a>";
+	                	}
+	                	
+	                	if(data[i].loc_tag.hasOwnProperty('H')==true){
+		                	content = content+ "<br/><a href='/user/rawdata?userId="+data[i]._id+"&loc=H'>Home</a>"
+	                	}
+                	}
+                	content = content+ "</div>";
+                	 $("#collapseOne").append(content);
+                }
+
+            });
+        }
+        
+        function contains(a, obj) {
+    var i = a.length;
+    while (i--) {
+       if (a[i] === obj) {
+           return true;
+       }
+    }
+    return false;
+}
+
+    </script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h1>WEKA File for User Information</h1>
+        <div id="progressinfocontainer"></div>
+        <div class="panel-group" id="accordion">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title" data-toggle="collapse" data-parent="#accordion" data-target="#collapseOne">
+							<a class="accordion-toggle">Details</a>
+						</h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse in" style="padding:20px">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+</body>
+
+</html>
