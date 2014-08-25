@@ -32,6 +32,10 @@ exports.usertag = function(req, res){
   res.render('process_user_appInfo', { title: 'Websense: Tag'});
 };
 
+exports.wekatag = function(req, res){
+  res.render('weka_file', { title: 'Websense: WEKA Files'});
+};
+
 
 
 exports.eula = function(req, res){

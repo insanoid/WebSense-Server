@@ -120,7 +120,8 @@ exports.findAll = function (req, res) {
 			});
 		}
 	});
-	
+
+/*	
  var foursquare = (require('foursquarevenues'))('BSJNYLLRYUPZIQNSD5XXOYZKK0UBGWWXFD31KEVHDGVHTQIU', 'XFOWWXQEKOHFMXVRSOBRACIA5OZUTZ5XMJZLKHZ1TXTPD4DI');
 
     var params = {
@@ -134,7 +135,7 @@ exports.findAll = function (req, res) {
             console.log("%j",venues);
         }
     });
-
+*/
 
 }
 

@@ -85,6 +85,9 @@ app.get('/geocluster', routes.geocluster);
 app.get('/userprocess', routes.userprocess);
 app.get('/userdual', routes.userdual);
 app.get('/user/tag', routes.usertag);
+app.get('/user/rawdata', appController.getDataSetForTag);
+app.get('/weka', routes.wekatag);
+
 
 app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.webDuringHoursAtLocation);
 

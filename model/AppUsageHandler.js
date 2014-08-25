@@ -653,5 +653,35 @@ AppUsageHandler.prototype.tagAppDataForUser = function(_user_id, geohash, tag, c
 };
 
 
+/**
+ * Fetches the data information for a particular user.
+ *
+ * @param {String} userId
+ * @param {String} Tag information
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.dataForUserLocTag = function(_user_id, tag, callback) {
+	
+	var packagesToIgnore = config.weka_ignore_packages;
+	var strObj = new String(_user_id);	
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.find({
+				user_id: ObjectID.createFromHexString(strObj),
+				loc_tag :  { $in: [tag]},
+				package_name: {
+					$nin: packagesToIgnore
+				}
+			}).toArray(function (error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+	
+};
+
 exports.AppInfoHandler = AppInfoHandler;
 exports.AppUsageHandler = AppUsageHandler;

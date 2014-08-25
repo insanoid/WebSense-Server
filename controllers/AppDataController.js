@@ -446,9 +446,81 @@ exports.updateAppTagsForUserInRange = function (req, res) {
 			});		
 }
 
+/**
+ * API Call - Handle data for WEKA.
+ *
+ * @param {String} email_address
+ * @api public
+ */
+exports.getDataSetForTag = function (req, res) {
 
+	var userId = req.param('userId');
+	var tag = req.param('loc');
+	
+	appCollection.dataForUserLocTag(userId, tag, function (error_info, result) {
+				if (!error_info) {
+					
+					basicAssociateInfo(result, function (data) {
+								makeAFile(data.content,res,userId+"_"+tag, data.keys, data.package);
+								//res.json({"file":true});
+							});
+				} else {
+
+					res.statusCode = 501;
+					return res.json({
+						error: "Invalid request."
+					});
+				}
+			});		
+}
 
 /**
+ * Internal processes the data to convert it to WEKA.
+ *
+ * @param {String} data
+ * @api private
+ */
+function makeAFile(data,res,uid, keys, PKGName) {
+
+res.setHeader('Content-disposition', 'attachment; filename=data_'+uid+".arff");
+res.setHeader('Content-type', 'text/plain');
+res.charset = 'UTF-8';
+res.write("@relation APPUSAGE\n");
+res.write("@attribute activeTime numeric\n");
+res.write("@attribute packageName ");
+var contentPK = "{";
+for(idx in PKGName){
+	contentPK = contentPK + sprintf("'%s',",PKGName[idx]);
+}
+contentPK = contentPK + "'com.uob.websense'}";
+res.write(contentPK+"\n");
+
+res.write("@attribute startMinuteDay numeric\n");
+res.write("@attribute locationTag string\n");
+res.write("@attribute category ");
+
+var content = "{";
+for(idx in keys){
+	content = content + sprintf("'%s',",handleString(keys[idx]));
+}
+content = content + "'AndroidSystem'}";
+res.write(content+"\n");
+
+
+res.write("\n");
+res.write("@data\n");
+for(idx in data){
+			res.write(sprintf("%s,'%s',%s,%s,'%s'\n", data[idx].active_time,data[idx].package_name,data[idx].start_minute_day,data[idx].loc_tag,handleString(data[idx].category)));
+		}
+res.end();
+
+}
+
+function handleString(str) {
+	return str.replace("&", "and")
+}
+
+/**	
  * API Call - fetches analyltics data for all users.
  *
  * @param {long} start_duration
@@ -591,6 +663,7 @@ function findAndUpdateAppInfo(appPackageName, callback) {
 		}
 	});
 }
+
 /**
  * Helper function to remove duplocates from the array.
  *
@@ -604,6 +677,7 @@ function arrayUnique(a) {
 		return p;
 	}, []);
 }
+
 /**
  * helper function to associate the values of app trends and app information.
  *
@@ -655,6 +729,60 @@ function associateValues(appList, callback) {
 	});
 }
 
+function basicAssociateInfo(appList, callback) {
+	var appPackageName = [];
+	var selectedCategories = {};
+	var packageNames = {};
+	
+	for (var n in appList) {
+	
+		delete appList[n].position;
+		delete appList[n].associated_url;
+		delete appList[n].synced;
+		delete appList[n].record_id;
+		delete appList[n].geohash;
+		delete appList[n].geohashZ;
+		delete appList[n].geohashZ4;
+		delete appList[n].geohashZ3;
+		delete appList[n].geohashZ2;
+		delete appList[n].geohashZ1;
+		delete appList[n].geohashZ5;
+		delete appList[n].start_time;
+		delete appList[n].end_time;
+		delete appList[n].user_id;
+		delete appList[n].app_name;
+		appList[n].loc_tag = appList[n].loc_tag[0];
+		
+		
+		appPackageName.push(appList[n].package_name);
+	}
+	var response = [];
+	appInfoCollection.AppInformationFor(appPackageName, function (error_info, result) {
+		for (var trendIndex in appList) {
+		
+			delete appList[trendIndex]['_id'];
+			for (var resultIndex in result) {
+				
+				if (appList[trendIndex].package_name == result[resultIndex].package_name) {
+					appList[trendIndex].category = result[resultIndex].category;
+					selectedCategories[result[resultIndex].category] = 1;
+				}
+				packageNames[result[resultIndex].package_name] = 1;
+			}
+		}
+		for (var n in appList) {
+			if(typeof appList[n].category == 'undefined'){
+				appList[n].category = "AndroidSystem";
+				packageNames[appList[n].package_name] = 1;
+			}	
+		}
+		var val = {};
+		val.content = appList;
+		val.keys = Object.keys(selectedCategories);
+		val.package = Object.keys(packageNames);
+		callback(val);
+	});
+}
 
 /**
  * Cleans the URL by removing trailing splaces, backslashes and hash.
@@ -717,4 +845,194 @@ function getUserForEmail(email, callback) {
 	} else {
 		callback(false, null);
 	}
+}
+
+function sprintf() {
+  //  discuss at: http://phpjs.org/functions/sprintf/
+  // original by: Ash Searle (http://hexmen.com/blog/)
+  // improved by: Michael White (http://getsprink.com)
+  // improved by: Jack
+  // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+  // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+  // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+  // improved by: Dj
+  // improved by: Allidylls
+  //    input by: Paulo Freitas
+  //    input by: Brett Zamir (http://brett-zamir.me)
+  //   example 1: sprintf("%01.2f", 123.1);
+  //   returns 1: 123.10
+  //   example 2: sprintf("[%10s]", 'monkey');
+  //   returns 2: '[    monkey]'
+  //   example 3: sprintf("[%'#10s]", 'monkey');
+  //   returns 3: '[####monkey]'
+  //   example 4: sprintf("%d", 123456789012345);
+  //   returns 4: '123456789012345'
+  //   example 5: sprintf('%-03s', 'E');
+  //   returns 5: 'E00'
+
+  var regex = /%%|%(\d+\$)?([-+\'#0 ]*)(\*\d+\$|\*|\d+)?(\.(\*\d+\$|\*|\d+))?([scboxXuideEfFgG])/g;
+  var a = arguments;
+  var i = 0;
+  var format = a[i++];
+
+  // pad()
+  var pad = function (str, len, chr, leftJustify) {
+    if (!chr) {
+      chr = ' ';
+    }
+    var padding = (str.length >= len) ? '' : new Array(1 + len - str.length >>> 0)
+      .join(chr);
+    return leftJustify ? str + padding : padding + str;
+  };
+
+  // justify()
+  var justify = function (value, prefix, leftJustify, minWidth, zeroPad, customPadChar) {
+    var diff = minWidth - value.length;
+    if (diff > 0) {
+      if (leftJustify || !zeroPad) {
+        value = pad(value, minWidth, customPadChar, leftJustify);
+      } else {
+        value = value.slice(0, prefix.length) + pad('', diff, '0', true) + value.slice(prefix.length);
+      }
+    }
+    return value;
+  };
+
+  // formatBaseX()
+  var formatBaseX = function (value, base, prefix, leftJustify, minWidth, precision, zeroPad) {
+    // Note: casts negative numbers to positive ones
+    var number = value >>> 0;
+    prefix = prefix && number && {
+      '2': '0b',
+      '8': '0',
+      '16': '0x'
+    }[base] || '';
+    value = prefix + pad(number.toString(base), precision || 0, '0', false);
+    return justify(value, prefix, leftJustify, minWidth, zeroPad);
+  };
+
+  // formatString()
+  var formatString = function (value, leftJustify, minWidth, precision, zeroPad, customPadChar) {
+    if (precision != null) {
+      value = value.slice(0, precision);
+    }
+    return justify(value, '', leftJustify, minWidth, zeroPad, customPadChar);
+  };
+
+  // doFormat()
+  var doFormat = function (substring, valueIndex, flags, minWidth, _, precision, type) {
+    var number, prefix, method, textTransform, value;
+
+    if (substring === '%%') {
+      return '%';
+    }
+
+    // parse flags
+    var leftJustify = false;
+    var positivePrefix = '';
+    var zeroPad = false;
+    var prefixBaseX = false;
+    var customPadChar = ' ';
+    var flagsl = flags.length;
+    for (var j = 0; flags && j < flagsl; j++) {
+      switch (flags.charAt(j)) {
+      case ' ':
+        positivePrefix = ' ';
+        break;
+      case '+':
+        positivePrefix = '+';
+        break;
+      case '-':
+        leftJustify = true;
+        break;
+      case "'":
+        customPadChar = flags.charAt(j + 1);
+        break;
+      case '0':
+        zeroPad = true;
+        customPadChar = '0';
+        break;
+      case '#':
+        prefixBaseX = true;
+        break;
+      }
+    }
+
+    // parameters may be null, undefined, empty-string or real valued
+    // we want to ignore null, undefined and empty-string values
+    if (!minWidth) {
+      minWidth = 0;
+    } else if (minWidth === '*') {
+      minWidth = +a[i++];
+    } else if (minWidth.charAt(0) == '*') {
+      minWidth = +a[minWidth.slice(1, -1)];
+    } else {
+      minWidth = +minWidth;
+    }
+
+    // Note: undocumented perl feature:
+    if (minWidth < 0) {
+      minWidth = -minWidth;
+      leftJustify = true;
+    }
+
+    if (!isFinite(minWidth)) {
+      throw new Error('sprintf: (minimum-)width must be finite');
+    }
+
+    if (!precision) {
+      precision = 'fFeE'.indexOf(type) > -1 ? 6 : (type === 'd') ? 0 : undefined;
+    } else if (precision === '*') {
+      precision = +a[i++];
+    } else if (precision.charAt(0) == '*') {
+      precision = +a[precision.slice(1, -1)];
+    } else {
+      precision = +precision;
+    }
+
+    // grab value using valueIndex if required?
+    value = valueIndex ? a[valueIndex.slice(0, -1)] : a[i++];
+
+    switch (type) {
+    case 's':
+      return formatString(String(value), leftJustify, minWidth, precision, zeroPad, customPadChar);
+    case 'c':
+      return formatString(String.fromCharCode(+value), leftJustify, minWidth, precision, zeroPad);
+    case 'b':
+      return formatBaseX(value, 2, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+    case 'o':
+      return formatBaseX(value, 8, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+    case 'x':
+      return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+    case 'X':
+      return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad)
+        .toUpperCase();
+    case 'u':
+      return formatBaseX(value, 10, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+    case 'i':
+    case 'd':
+      number = +value || 0;
+      // Plain Math.round doesn't just truncate
+      number = Math.round(number - number % 1);
+      prefix = number < 0 ? '-' : positivePrefix;
+      value = prefix + pad(String(Math.abs(number)), precision, '0', false);
+      return justify(value, prefix, leftJustify, minWidth, zeroPad);
+    case 'e':
+    case 'E':
+    case 'f': // Should handle locales (as per setlocale)
+    case 'F':
+    case 'g':
+    case 'G':
+      number = +value;
+      prefix = number < 0 ? '-' : positivePrefix;
+      method = ['toExponential', 'toFixed', 'toPrecision']['efg'.indexOf(type.toLowerCase())];
+      textTransform = ['toString', 'toUpperCase']['eEfFgG'.indexOf(type) % 2];
+      value = prefix + Math.abs(number)[method](precision);
+      return justify(value, prefix, leftJustify, minWidth, zeroPad)[textTransform]();
+    default:
+      return substring;
+    }
+  };
+
+  return format.replace(regex, doFormat);
 }
