@@ -786,19 +786,21 @@ AppUsageHandler.prototype.findPossibleLocationClusters = function (callback) {
 
 
 			var map = function () {
-					emit(this.geohashZ2, {count:1,time:this.active_time,start_minute_day:this.start_minute_day})
+					emit(this.geohashZ2, {count:1}) //,time:this.active_time,start_minute_day:this.start_minute_day
 				};
 			var reduce = function (key, values) {
 			
-					var reducedVal = { count: 0, time: 0, start_minute_day:0 };
+					var reducedVal = { count: 0}; //, time: 0, start_minute_day:0 
 
                      for (var idx = 0; idx < values.length; idx++) {
                          reducedVal.count += values[idx].count;
+/*
                          reducedVal.time += values[idx].time;
                          reducedVal.start_minute_day += values[idx].start_minute_day;
+*/
                      }
 
-                     reducedVal.avg = reducedVal.start_minute_day/reducedVal.count;  
+//                     reducedVal.avg = reducedVal.start_minute_day/reducedVal.count;  
                      return reducedVal;
                      
 				

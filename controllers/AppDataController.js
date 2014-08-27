@@ -516,11 +516,11 @@ exports.getAllClusters = function (req, res) {
 				}
 			}
 
-			//if (newResult.length > 10) result = result.slice(0, 10);
-			for (idx in result) {
+			if (newResult.length > 10) result = result.slice(0, 10);
+		/*	for (idx in result) {
 				if (result[idx]._id != null) foursquareAPIHandler(result[idx]._id, null);
 			}
-
+*/
 			res.statusCode = 200;
 			return res.json(newResult);
 		} else {
