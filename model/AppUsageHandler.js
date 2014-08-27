@@ -802,9 +802,6 @@ AppUsageHandler.prototype.findPossibleLocationClusters = function (callback) {
 
 //                     reducedVal.avg = reducedVal.start_minute_day/reducedVal.count;  
                      return reducedVal;
-                     
-				
-					return Array.sum(values);
 				};
 			appcollection.mapReduce(map, reduce, {
 				out: {
