@@ -24,7 +24,6 @@
         var totalFailure = 0;
 
         $(document).ready(function () {
-            $("#collapseOne").collapse('hide');
             loadUsers();
         });
 
@@ -47,9 +46,11 @@
 	                	if(data[i].loc_tag.hasOwnProperty('H')==true){
 		                	content = content+ "<br/><a href='/user/rawdata?userId="+data[i]._id+"&loc=H'>Home</a>"
 	                	}
-                	}
-                	content = content+ "</div>";
+	                 
+	                 content = content+ "</div>";
                 	 $("#collapseOne").append(content);
+                	}
+                	
                 }
 
             });
@@ -66,18 +67,19 @@
 }
 
     </script>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
     <div class="container">
-        <h1>WEKA File for User Information</h1>
+        <h1>WEKA Files For Individual</h1>
         <div id="progressinfocontainer"></div>
+        <div class='alert alert-info'><a href="/weka/all">All Tags Data</a></div>
         <div class="panel-group" id="accordion">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4 class="panel-title" data-toggle="collapse" data-parent="#accordion" data-target="#collapseOne">
-							<a class="accordion-toggle">Details</a>
+							<a class="accordion-toggle">User Files</a>
 						</h4>
                 </div>
                 <div id="collapseOne" class="panel-collapse collapse in" style="padding:20px">
@@ -88,7 +90,7 @@
     </div>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
+<script src="../js/bootstrap.min.js"></script>
 </body>
 
 </html>

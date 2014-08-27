@@ -82,13 +82,19 @@ app.get('/app/userrecords/detailed', appController.getUserAppUsageData);
 app.get('/cluster', routes.cluster);
 app.get('/heatmap', routes.heatmap);
 app.get('/geocluster', routes.geocluster);
+
+//for office and home tagging
 app.get('/userprocess', routes.userprocess);
 app.get('/userdual', routes.userdual);
 app.get('/user/tag', routes.usertag);
-app.get('/user/rawdata', appController.getDataSetForTag);
-app.get('/weka/user', routes.wekatag);
+
+//for foursquare tagging.
 app.get('/allcluster', appController.getAllClusters);
 app.get('/updateClustertags', appController.updateClusterTags);
+
+//get weka file.
+app.get('/weka/user', routes.wekatag); 
+app.get('/user/rawdata', appController.getDataSetForTag);
 app.get('/weka/all', appController.getDataSetForGenericTag);
 
 app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.webDuringHoursAtLocation);

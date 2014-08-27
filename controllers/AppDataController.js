@@ -1030,7 +1030,7 @@ function makeAFile(data, res, uid, keys, PKGName) {
 	res.write("\n");
 	res.write("@data\n");
 	for (idx in data) {
-		res.write(sprintf("%s,'%s',%s,%s,'%s'\n", data[idx].active_time, data[idx].package_name, data[idx].start_minute_day, data[idx].loc_tag, handleString(data[idx].category)));
+		res.write(sprintf("%s,'%s',%s,'%s','%s'\n", data[idx].active_time, data[idx].package_name, data[idx].start_minute_day, data[idx].loc_tag, handleString(data[idx].category)));
 	}
 	res.end();
 
@@ -1083,13 +1083,14 @@ function makeAGenericFile(data, res, uid, keys, locationTag, PKGName) {
 	res.write("\n");
 	res.write("@data\n");
 	for (idx in data) {
-		res.write(sprintf("%s,'%s',%s,'%s','%s'\n", data[idx].active_time, data[idx].package_name, data[idx].start_minute_day, data[idx].generic_loc_tag.replace(
-		"'", ""), handleString(data[idx].category)));
+		var generic_tag = data[idx].generic_loc_tag.replace("'", "");
+		res.write(sprintf("%s,'%s',%s,'%s','%s'\n", data[idx].active_time, data[idx].package_name, data[idx].start_minute_day, generic_tag, handleString(data[idx].category)));
 	}
 	res.end();
 }
 
 function handleString(str) {
+	str = str.replace("'", "")
 	return str.replace("&", "and")
 }
 
