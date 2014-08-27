@@ -86,8 +86,10 @@ app.get('/userprocess', routes.userprocess);
 app.get('/userdual', routes.userdual);
 app.get('/user/tag', routes.usertag);
 app.get('/user/rawdata', appController.getDataSetForTag);
-app.get('/weka', routes.wekatag);
-
+app.get('/weka/user', routes.wekatag);
+app.get('/allcluster', appController.getAllClusters);
+app.get('/updateClustertags', appController.updateClusterTags);
+app.get('/weka/all', appController.getDataSetForGenericTag);
 
 app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.webDuringHoursAtLocation);
 

@@ -8,9 +8,11 @@ var geohash = require('ngeohash');
 
 var AppUsageHandler = require('../model/AppUsageHandler').AppUsageHandler;
 var AppInfoHandler = require('../model/AppUsageHandler').AppInfoHandler;
+var GeoTagHandler = require('../model/AppUsageHandler').GeoTagHandler;
+
 var appCollection = null;
 var appInfoCollection = null;
-
+var geoCollection = null;
 
 if (typeof (Number.prototype.toRad) === "undefined") {
 	Number.prototype.toRad = function () {
@@ -46,6 +48,7 @@ function getDistance(start, end) {
 exports.initDBConnection = function (_dbConn) {
 	appCollection = new AppUsageHandler(_dbConn);
 	appInfoCollection = new AppInfoHandler(_dbConn);
+	geoCollection = new GeoTagHandler(_dbConn);
 }
 
 /**
@@ -263,7 +266,6 @@ exports.getUserAnalytics = function (req, res) {
 						record_count: result.length
 					});
 				} else {
-					console.log("-- %s", error_info);
 					res.statusCode = 501;
 					return res.json({
 						error: "Invalid request."
@@ -336,7 +338,6 @@ exports.getUserGeoCluster = function (req, res) {
 						return parseInt(b.value.count) - parseInt(a.value.count)
 					});
 					//if (result.length > 3) result = result.slice(0, 3);
-
 					for (i in result) {
 
 						var loc = geohash.decode(result[i]._id);
@@ -393,8 +394,8 @@ exports.getUserGeoClusterForTimeRange = function (req, res) {
 
 						var loc = geohash.decode(result[i]._id);
 						result[i].position = [loc.latitude, loc.longitude];
-					}	
-					
+					}
+
 					res.json(result);
 				} else {
 
@@ -428,22 +429,22 @@ exports.updateAppTagsForUserInRange = function (req, res) {
 	var userId = req.param('userId');
 	var geohash = req.param('geohash');
 	var tag = req.param('tag');
-	
+
 	appCollection.tagAppDataForUser(userId, geohash, tag, function (error_info, result) {
-				if (!error_info) {
+		if (!error_info) {
 
-					res.statusCode = 200;
-					return res.json({
-						count: result
-					});
-				} else {
+			res.statusCode = 200;
+			return res.json({
+				count: result
+			});
+		} else {
 
-					res.statusCode = 501;
-					return res.json({
-						error: "Invalid request."
-					});
-				}
-			});		
+			res.statusCode = 501;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
 }
 
 /**
@@ -456,68 +457,111 @@ exports.getDataSetForTag = function (req, res) {
 
 	var userId = req.param('userId');
 	var tag = req.param('loc');
-	
-	appCollection.dataForUserLocTag(userId, tag, function (error_info, result) {
-				if (!error_info) {
-					
-					basicAssociateInfo(result, function (data) {
-								makeAFile(data.content,res,userId+"_"+tag, data.keys, data.package);
-								//res.json({"file":true});
-							});
-				} else {
 
-					res.statusCode = 501;
-					return res.json({
-						error: "Invalid request."
-					});
-				}
-			});		
+	appCollection.dataForUserLocTag(userId, tag, function (error_info, result) {
+		if (!error_info) {
+
+			basicAssociateInfo(result, function (data) {
+				makeAFile(data.content, res, userId + "_" + tag, data.keys, data.package);
+			});
+		} else {
+
+			res.statusCode = 501;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
 }
 
 /**
- * Internal processes the data to convert it to WEKA.
- *
- * @param {String} data
- * @api private
+ * API Call - Handle data for WEKA. (All tags)
+ * @api public
  */
-function makeAFile(data,res,uid, keys, PKGName) {
+exports.getDataSetForGenericTag = function (req, res) {
 
-res.setHeader('Content-disposition', 'attachment; filename=data_'+uid+".arff");
-res.setHeader('Content-type', 'text/plain');
-res.charset = 'UTF-8';
-res.write("@relation APPUSAGE\n");
-res.write("@attribute activeTime numeric\n");
-res.write("@attribute packageName ");
-var contentPK = "{";
-for(idx in PKGName){
-	contentPK = contentPK + sprintf("'%s',",PKGName[idx]);
-}
-contentPK = contentPK + "'com.uob.websense'}";
-res.write(contentPK+"\n");
+	appCollection.getAppDataForTaggedRecords(function (error_info, result) {
+		if (!error_info) {
 
-res.write("@attribute startMinuteDay numeric\n");
-res.write("@attribute locationTag string\n");
-res.write("@attribute category ");
+			basicGenericAssociateInfo(result, function (data) {
+				makeAGenericFile(data.content, res, "GENERIC_FILE", data.keys, data.locationTag, data.package);
+			});
+		} else {
 
-var content = "{";
-for(idx in keys){
-	content = content + sprintf("'%s',",handleString(keys[idx]));
-}
-content = content + "'AndroidSystem'}";
-res.write(content+"\n");
-
-
-res.write("\n");
-res.write("@data\n");
-for(idx in data){
-			res.write(sprintf("%s,'%s',%s,%s,'%s'\n", data[idx].active_time,data[idx].package_name,data[idx].start_minute_day,data[idx].loc_tag,handleString(data[idx].category)));
+			res.statusCode = 501;
+			return res.json({
+				error: "Invalid request."
+			});
 		}
-res.end();
-
+	});
 }
 
-function handleString(str) {
-	return str.replace("&", "and")
+/**
+ * API Call - Get all possible spatial clusters.
+ *
+ * @param {String} email_address
+ * @api public
+ */
+exports.getAllClusters = function (req, res) {
+
+	var userId = req.param('userId');
+
+	appCollection.findPossibleLocationClusters(function (error_info, result) {
+		if (!error_info) {
+
+			var newResult = [];
+			for (idx in result) {
+				if (result[idx].value.count > 10) {
+					newResult.push(result[idx]);
+				}
+			}
+
+			//if (newResult.length > 10) result = result.slice(0, 10);
+			for (idx in result) {
+				if (result[idx]._id != null) foursquareAPIHandler(result[idx]._id, null);
+			}
+
+			res.statusCode = 200;
+			return res.json(newResult);
+		} else {
+
+			res.statusCode = 501;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
+}
+
+/**
+ * API Call - tag information.
+ *
+ * @param {String} email_address
+ * @api public
+ */
+exports.updateClusterTags = function (req, res) {
+
+	var userId = req.param('userId');
+
+	geoCollection.findAll(function (error_info, result) {
+		if (!error_info) {
+
+			for (idx in result) {
+				console.log("-> %s %s",result[idx].geohash,result[idx].category);
+				appCollection.tagAppDataForAll(result[idx].geohash,result[idx].category, function (error_info, result) {
+					
+					
+				});
+			}
+
+		} else {
+
+			res.statusCode = 501;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
 }
 
 /**	
@@ -733,9 +777,9 @@ function basicAssociateInfo(appList, callback) {
 	var appPackageName = [];
 	var selectedCategories = {};
 	var packageNames = {};
-	
+
 	for (var n in appList) {
-	
+
 		delete appList[n].position;
 		delete appList[n].associated_url;
 		delete appList[n].synced;
@@ -752,17 +796,17 @@ function basicAssociateInfo(appList, callback) {
 		delete appList[n].user_id;
 		delete appList[n].app_name;
 		appList[n].loc_tag = appList[n].loc_tag[0];
-		
-		
+
+
 		appPackageName.push(appList[n].package_name);
 	}
 	var response = [];
 	appInfoCollection.AppInformationFor(appPackageName, function (error_info, result) {
 		for (var trendIndex in appList) {
-		
+
 			delete appList[trendIndex]['_id'];
 			for (var resultIndex in result) {
-				
+
 				if (appList[trendIndex].package_name == result[resultIndex].package_name) {
 					appList[trendIndex].category = result[resultIndex].category;
 					selectedCategories[result[resultIndex].category] = 1;
@@ -771,15 +815,73 @@ function basicAssociateInfo(appList, callback) {
 			}
 		}
 		for (var n in appList) {
-			if(typeof appList[n].category == 'undefined'){
+			if (typeof appList[n].category == 'undefined') {
 				appList[n].category = "AndroidSystem";
 				packageNames[appList[n].package_name] = 1;
-			}	
+			}
 		}
 		var val = {};
 		val.content = appList;
 		val.keys = Object.keys(selectedCategories);
 		val.package = Object.keys(packageNames);
+		callback(val);
+	});
+}
+
+function basicGenericAssociateInfo(appList, callback) {
+	var appPackageName = [];
+	var selectedCategories = {};
+	var packageNames = {};
+	var locationTags = {};
+	
+	for (var n in appList) {
+
+		delete appList[n].position;
+		delete appList[n].associated_url;
+		delete appList[n].synced;
+		delete appList[n].record_id;
+		delete appList[n].geohash;
+		delete appList[n].geohashZ;
+		delete appList[n].geohashZ4;
+		delete appList[n].geohashZ3;
+		delete appList[n].geohashZ2;
+		delete appList[n].geohashZ1;
+		delete appList[n].geohashZ5;
+		delete appList[n].start_time;
+		delete appList[n].end_time;
+		delete appList[n].user_id;
+		delete appList[n].app_name;
+		appList[n].generic_loc_tag = appList[n].generic_loc_tag[0];
+
+
+		appPackageName.push(appList[n].package_name);
+	}
+	var response = [];
+	appInfoCollection.AppInformationFor(appPackageName, function (error_info, result) {
+		for (var trendIndex in appList) {
+
+			delete appList[trendIndex]['_id'];
+			for (var resultIndex in result) {
+
+				if (appList[trendIndex].package_name == result[resultIndex].package_name) {
+					appList[trendIndex].category = result[resultIndex].category;
+					selectedCategories[result[resultIndex].category] = 1;
+				}
+			}
+			packageNames[appList[trendIndex].package_name] = 1;
+			locationTags[appList[trendIndex].generic_loc_tag] = 1;
+		}
+		for (var n in appList) {
+			if (typeof appList[n].category == 'undefined') {
+				appList[n].category = "AndroidSystem";
+				packageNames[appList[n].package_name] = 1;
+			}
+		}
+		var val = {};
+		val.content = appList;
+		val.keys = Object.keys(selectedCategories);
+		val.package = Object.keys(packageNames);
+		val.locationTag = Object.keys(locationTags);
 		callback(val);
 	});
 }
@@ -835,7 +937,7 @@ function getUserForEmail(email, callback) {
 	if (email) {
 
 		user.findUser(email, function (user, error) {
-			
+
 			if (user) {
 				callback(true, user);
 			} else {
@@ -847,192 +949,334 @@ function getUserForEmail(email, callback) {
 	}
 }
 
+
+/**
+ * Handle Foursquare API tagging.
+ * @api private
+ */
+function foursquareAPIHandler(geohashVal, callback) {
+
+	var loc = geohash.decode(geohashVal);
+	var str = sprintf("%f,%f", loc.latitude, loc.longitude)
+
+	var foursquare = (require('foursquarevenues'))('BSJNYLLRYUPZIQNSD5XXOYZKK0UBGWWXFD31KEVHDGVHTQIU', 'XFOWWXQEKOHFMXVRSOBRACIA5OZUTZ5XMJZLKHZ1TXTPD4DI');
+
+	var params = {
+		"ll": str,
+		"radius": 10,
+		"limit": 1
+	};
+
+	foursquare.getVenues(params, function (error, venues) {
+
+		if (!error) {
+			try {
+
+				console.log("%s {%s} - %s", geohashVal, venues.response.venues[0].name, venues.response.venues[0].categories[0].name);
+
+				var venue = {};
+				venue.geohash = geohashVal;
+				venue.category = venues.response.venues[0].categories[0].name;
+				venue.placeName = geohashVal, venues.response.venues[0].name;
+
+				geoCollection.addGeoTagInfo(venue, function (error_info, result) {
+
+					if (!error_info) {
+
+					}
+				});
+			} catch (err) {
+				console.log("%s", err.message);
+			}
+		}
+	});
+
+}
+
+/**
+ * Internal processes the data to convert it to WEKA.
+ *
+ * @param {String} data
+ * @api private
+ */
+
+function makeAFile(data, res, uid, keys, PKGName) {
+
+	res.setHeader('Content-disposition', 'attachment; filename=data_' + uid + ".arff");
+	res.setHeader('Content-type', 'text/plain');
+	res.charset = 'UTF-8';
+	res.write("@relation APPUSAGE\n");
+	res.write("@attribute activeTime numeric\n");
+	res.write("@attribute packageName ");
+	var contentPK = "{";
+	for (idx in PKGName) {
+		contentPK = contentPK + sprintf("'%s',", PKGName[idx]);
+	}
+	contentPK = contentPK + "'com.uob.websense'}";
+	res.write(contentPK + "\n");
+
+	res.write("@attribute startMinuteDay numeric\n");
+	res.write("@attribute locationTag string\n");
+	res.write("@attribute category ");
+
+	var content = "{";
+	for (idx in keys) {
+		content = content + sprintf("'%s',", handleString(keys[idx]));
+	}
+	content = content + "'AndroidSystem'}";
+	res.write(content + "\n");
+
+
+	res.write("\n");
+	res.write("@data\n");
+	for (idx in data) {
+		res.write(sprintf("%s,'%s',%s,%s,'%s'\n", data[idx].active_time, data[idx].package_name, data[idx].start_minute_day, data[idx].loc_tag, handleString(data[idx].category)));
+	}
+	res.end();
+
+}
+
+/**
+ * Internal processes the data to convert it to WEKA.
+ *
+ * @param {String} data
+ * @api private
+ */
+
+function makeAGenericFile(data, res, uid, keys, locationTag, PKGName) {
+
+	res.setHeader('Content-disposition', 'attachment; filename=data_' + uid + ".arff");
+	res.setHeader('Content-type', 'text/plain');
+	res.charset = 'UTF-8';
+	res.write("@relation APPUSAGE\n");
+	res.write("@attribute activeTime numeric\n");
+	res.write("@attribute packageName ");
+	
+	var contentPK = "{";
+	for (idx in PKGName) {
+		contentPK = contentPK + sprintf("'%s',", PKGName[idx]);
+	}
+	contentPK = contentPK + "'com.uob.websense'}";
+	res.write(contentPK + "\n");
+
+	res.write("@attribute startMinuteDay numeric\n");
+	res.write("@attribute locationTag ");
+	
+	var contentLC = "{";
+	for (idx in locationTag) {
+		contentLC = contentLC + sprintf("'%s',", locationTag[idx].replace("'", ""));
+	}
+	contentLC = contentLC + "'extra'}";
+	res.write(contentLC + "\n");
+
+
+	res.write("@attribute category ");
+
+	var content = "{";
+	for (idx in keys) {
+		content = content + sprintf("'%s',", handleString(keys[idx]));
+	}
+	content = content + "'AndroidSystem'}";
+	res.write(content + "\n");
+
+
+	res.write("\n");
+	res.write("@data\n");
+	for (idx in data) {
+		res.write(sprintf("%s,'%s',%s,'%s','%s'\n", data[idx].active_time, data[idx].package_name, data[idx].start_minute_day, data[idx].generic_loc_tag.replace(
+		"'", ""), handleString(data[idx].category)));
+	}
+	res.end();
+}
+
+function handleString(str) {
+	return str.replace("&", "and")
+}
+
 function sprintf() {
-  //  discuss at: http://phpjs.org/functions/sprintf/
-  // original by: Ash Searle (http://hexmen.com/blog/)
-  // improved by: Michael White (http://getsprink.com)
-  // improved by: Jack
-  // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-  // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-  // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-  // improved by: Dj
-  // improved by: Allidylls
-  //    input by: Paulo Freitas
-  //    input by: Brett Zamir (http://brett-zamir.me)
-  //   example 1: sprintf("%01.2f", 123.1);
-  //   returns 1: 123.10
-  //   example 2: sprintf("[%10s]", 'monkey');
-  //   returns 2: '[    monkey]'
-  //   example 3: sprintf("[%'#10s]", 'monkey');
-  //   returns 3: '[####monkey]'
-  //   example 4: sprintf("%d", 123456789012345);
-  //   returns 4: '123456789012345'
-  //   example 5: sprintf('%-03s', 'E');
-  //   returns 5: 'E00'
+	//  discuss at: http://phpjs.org/functions/sprintf/
+	// original by: Ash Searle (http://hexmen.com/blog/)
+	// improved by: Michael White (http://getsprink.com)
+	// improved by: Jack
+	// improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	// improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	// improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	// improved by: Dj
+	// improved by: Allidylls
+	//    input by: Paulo Freitas
+	//    input by: Brett Zamir (http://brett-zamir.me)
+	//   example 1: sprintf("%01.2f", 123.1);
+	//   returns 1: 123.10
+	//   example 2: sprintf("[%10s]", 'monkey');
+	//   returns 2: '[    monkey]'
+	//   example 3: sprintf("[%'#10s]", 'monkey');
+	//   returns 3: '[####monkey]'
+	//   example 4: sprintf("%d", 123456789012345);
+	//   returns 4: '123456789012345'
+	//   example 5: sprintf('%-03s', 'E');
+	//   returns 5: 'E00'
+	var regex = /%%|%(\d+\$)?([-+\'#0 ]*)(\*\d+\$|\*|\d+)?(\.(\*\d+\$|\*|\d+))?([scboxXuideEfFgG])/g;
+	var a = arguments;
+	var i = 0;
+	var format = a[i++];
 
-  var regex = /%%|%(\d+\$)?([-+\'#0 ]*)(\*\d+\$|\*|\d+)?(\.(\*\d+\$|\*|\d+))?([scboxXuideEfFgG])/g;
-  var a = arguments;
-  var i = 0;
-  var format = a[i++];
+	// pad()
+	var pad = function (str, len, chr, leftJustify) {
+			if (!chr) {
+				chr = ' ';
+			}
+			var padding = (str.length >= len) ? '' : new Array(1 + len - str.length >>> 0).join(chr);
+			return leftJustify ? str + padding : padding + str;
+		};
 
-  // pad()
-  var pad = function (str, len, chr, leftJustify) {
-    if (!chr) {
-      chr = ' ';
-    }
-    var padding = (str.length >= len) ? '' : new Array(1 + len - str.length >>> 0)
-      .join(chr);
-    return leftJustify ? str + padding : padding + str;
-  };
+	// justify()
+	var justify = function (value, prefix, leftJustify, minWidth, zeroPad, customPadChar) {
+			var diff = minWidth - value.length;
+			if (diff > 0) {
+				if (leftJustify || !zeroPad) {
+					value = pad(value, minWidth, customPadChar, leftJustify);
+				} else {
+					value = value.slice(0, prefix.length) + pad('', diff, '0', true) + value.slice(prefix.length);
+				}
+			}
+			return value;
+		};
 
-  // justify()
-  var justify = function (value, prefix, leftJustify, minWidth, zeroPad, customPadChar) {
-    var diff = minWidth - value.length;
-    if (diff > 0) {
-      if (leftJustify || !zeroPad) {
-        value = pad(value, minWidth, customPadChar, leftJustify);
-      } else {
-        value = value.slice(0, prefix.length) + pad('', diff, '0', true) + value.slice(prefix.length);
-      }
-    }
-    return value;
-  };
+	// formatBaseX()
+	var formatBaseX = function (value, base, prefix, leftJustify, minWidth, precision, zeroPad) {
+			// Note: casts negative numbers to positive ones
+			var number = value >>> 0;
+			prefix = prefix && number && {
+				'2': '0b',
+				'8': '0',
+				'16': '0x'
+			}[base] || '';
+			value = prefix + pad(number.toString(base), precision || 0, '0', false);
+			return justify(value, prefix, leftJustify, minWidth, zeroPad);
+		};
 
-  // formatBaseX()
-  var formatBaseX = function (value, base, prefix, leftJustify, minWidth, precision, zeroPad) {
-    // Note: casts negative numbers to positive ones
-    var number = value >>> 0;
-    prefix = prefix && number && {
-      '2': '0b',
-      '8': '0',
-      '16': '0x'
-    }[base] || '';
-    value = prefix + pad(number.toString(base), precision || 0, '0', false);
-    return justify(value, prefix, leftJustify, minWidth, zeroPad);
-  };
+	// formatString()
+	var formatString = function (value, leftJustify, minWidth, precision, zeroPad, customPadChar) {
+			if (precision != null) {
+				value = value.slice(0, precision);
+			}
+			return justify(value, '', leftJustify, minWidth, zeroPad, customPadChar);
+		};
 
-  // formatString()
-  var formatString = function (value, leftJustify, minWidth, precision, zeroPad, customPadChar) {
-    if (precision != null) {
-      value = value.slice(0, precision);
-    }
-    return justify(value, '', leftJustify, minWidth, zeroPad, customPadChar);
-  };
+	// doFormat()
+	var doFormat = function (substring, valueIndex, flags, minWidth, _, precision, type) {
+			var number, prefix, method, textTransform, value;
 
-  // doFormat()
-  var doFormat = function (substring, valueIndex, flags, minWidth, _, precision, type) {
-    var number, prefix, method, textTransform, value;
+			if (substring === '%%') {
+				return '%';
+			}
 
-    if (substring === '%%') {
-      return '%';
-    }
+			// parse flags
+			var leftJustify = false;
+			var positivePrefix = '';
+			var zeroPad = false;
+			var prefixBaseX = false;
+			var customPadChar = ' ';
+			var flagsl = flags.length;
+			for (var j = 0; flags && j < flagsl; j++) {
+				switch (flags.charAt(j)) {
+				case ' ':
+					positivePrefix = ' ';
+					break;
+				case '+':
+					positivePrefix = '+';
+					break;
+				case '-':
+					leftJustify = true;
+					break;
+				case "'":
+					customPadChar = flags.charAt(j + 1);
+					break;
+				case '0':
+					zeroPad = true;
+					customPadChar = '0';
+					break;
+				case '#':
+					prefixBaseX = true;
+					break;
+				}
+			}
 
-    // parse flags
-    var leftJustify = false;
-    var positivePrefix = '';
-    var zeroPad = false;
-    var prefixBaseX = false;
-    var customPadChar = ' ';
-    var flagsl = flags.length;
-    for (var j = 0; flags && j < flagsl; j++) {
-      switch (flags.charAt(j)) {
-      case ' ':
-        positivePrefix = ' ';
-        break;
-      case '+':
-        positivePrefix = '+';
-        break;
-      case '-':
-        leftJustify = true;
-        break;
-      case "'":
-        customPadChar = flags.charAt(j + 1);
-        break;
-      case '0':
-        zeroPad = true;
-        customPadChar = '0';
-        break;
-      case '#':
-        prefixBaseX = true;
-        break;
-      }
-    }
+			// parameters may be null, undefined, empty-string or real valued
+			// we want to ignore null, undefined and empty-string values
+			if (!minWidth) {
+				minWidth = 0;
+			} else if (minWidth === '*') {
+				minWidth = +a[i++];
+			} else if (minWidth.charAt(0) == '*') {
+				minWidth = +a[minWidth.slice(1, -1)];
+			} else {
+				minWidth = +minWidth;
+			}
 
-    // parameters may be null, undefined, empty-string or real valued
-    // we want to ignore null, undefined and empty-string values
-    if (!minWidth) {
-      minWidth = 0;
-    } else if (minWidth === '*') {
-      minWidth = +a[i++];
-    } else if (minWidth.charAt(0) == '*') {
-      minWidth = +a[minWidth.slice(1, -1)];
-    } else {
-      minWidth = +minWidth;
-    }
+			// Note: undocumented perl feature:
+			if (minWidth < 0) {
+				minWidth = -minWidth;
+				leftJustify = true;
+			}
 
-    // Note: undocumented perl feature:
-    if (minWidth < 0) {
-      minWidth = -minWidth;
-      leftJustify = true;
-    }
+			if (!isFinite(minWidth)) {
+				throw new Error('sprintf: (minimum-)width must be finite');
+			}
 
-    if (!isFinite(minWidth)) {
-      throw new Error('sprintf: (minimum-)width must be finite');
-    }
+			if (!precision) {
+				precision = 'fFeE'.indexOf(type) > -1 ? 6 : (type === 'd') ? 0 : undefined;
+			} else if (precision === '*') {
+				precision = +a[i++];
+			} else if (precision.charAt(0) == '*') {
+				precision = +a[precision.slice(1, -1)];
+			} else {
+				precision = +precision;
+			}
 
-    if (!precision) {
-      precision = 'fFeE'.indexOf(type) > -1 ? 6 : (type === 'd') ? 0 : undefined;
-    } else if (precision === '*') {
-      precision = +a[i++];
-    } else if (precision.charAt(0) == '*') {
-      precision = +a[precision.slice(1, -1)];
-    } else {
-      precision = +precision;
-    }
+			// grab value using valueIndex if required?
+			value = valueIndex ? a[valueIndex.slice(0, -1)] : a[i++];
 
-    // grab value using valueIndex if required?
-    value = valueIndex ? a[valueIndex.slice(0, -1)] : a[i++];
+			switch (type) {
+			case 's':
+				return formatString(String(value), leftJustify, minWidth, precision, zeroPad, customPadChar);
+			case 'c':
+				return formatString(String.fromCharCode(+value), leftJustify, minWidth, precision, zeroPad);
+			case 'b':
+				return formatBaseX(value, 2, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+			case 'o':
+				return formatBaseX(value, 8, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+			case 'x':
+				return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+			case 'X':
+				return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad).toUpperCase();
+			case 'u':
+				return formatBaseX(value, 10, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+			case 'i':
+			case 'd':
+				number = +value || 0;
+				// Plain Math.round doesn't just truncate
+				number = Math.round(number - number % 1);
+				prefix = number < 0 ? '-' : positivePrefix;
+				value = prefix + pad(String(Math.abs(number)), precision, '0', false);
+				return justify(value, prefix, leftJustify, minWidth, zeroPad);
+			case 'e':
+			case 'E':
+			case 'f':
+				// Should handle locales (as per setlocale)
+			case 'F':
+			case 'g':
+			case 'G':
+				number = +value;
+				prefix = number < 0 ? '-' : positivePrefix;
+				method = ['toExponential', 'toFixed', 'toPrecision']['efg'.indexOf(type.toLowerCase())];
+				textTransform = ['toString', 'toUpperCase']['eEfFgG'.indexOf(type) % 2];
+				value = prefix + Math.abs(number)[method](precision);
+				return justify(value, prefix, leftJustify, minWidth, zeroPad)[textTransform]();
+			default:
+				return substring;
+			}
+		};
 
-    switch (type) {
-    case 's':
-      return formatString(String(value), leftJustify, minWidth, precision, zeroPad, customPadChar);
-    case 'c':
-      return formatString(String.fromCharCode(+value), leftJustify, minWidth, precision, zeroPad);
-    case 'b':
-      return formatBaseX(value, 2, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
-    case 'o':
-      return formatBaseX(value, 8, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
-    case 'x':
-      return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
-    case 'X':
-      return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad)
-        .toUpperCase();
-    case 'u':
-      return formatBaseX(value, 10, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
-    case 'i':
-    case 'd':
-      number = +value || 0;
-      // Plain Math.round doesn't just truncate
-      number = Math.round(number - number % 1);
-      prefix = number < 0 ? '-' : positivePrefix;
-      value = prefix + pad(String(Math.abs(number)), precision, '0', false);
-      return justify(value, prefix, leftJustify, minWidth, zeroPad);
-    case 'e':
-    case 'E':
-    case 'f': // Should handle locales (as per setlocale)
-    case 'F':
-    case 'g':
-    case 'G':
-      number = +value;
-      prefix = number < 0 ? '-' : positivePrefix;
-      method = ['toExponential', 'toFixed', 'toPrecision']['efg'.indexOf(type.toLowerCase())];
-      textTransform = ['toString', 'toUpperCase']['eEfFgG'.indexOf(type) % 2];
-      value = prefix + Math.abs(number)[method](precision);
-      return justify(value, prefix, leftJustify, minWidth, zeroPad)[textTransform]();
-    default:
-      return substring;
-    }
-  };
-
-  return format.replace(regex, doFormat);
+	return format.replace(regex, doFormat);
 }

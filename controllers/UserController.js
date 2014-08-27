@@ -120,23 +120,6 @@ exports.findAll = function (req, res) {
 			});
 		}
 	});
-
-/*	
- var foursquare = (require('foursquarevenues'))('BSJNYLLRYUPZIQNSD5XXOYZKK0UBGWWXFD31KEVHDGVHTQIU', 'XFOWWXQEKOHFMXVRSOBRACIA5OZUTZ5XMJZLKHZ1TXTPD4DI');
-
-    var params = {
-        "ll": "52.45147705078125,-1.9390869140625",
-        "radius":10,
-        "limit":1
-    };
-
-    foursquare.getVenues(params, function(error, venues) {
-        if (!error) {
-            console.log("%j",venues);
-        }
-    });
-*/
-
 }
 
 /**

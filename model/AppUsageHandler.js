@@ -31,6 +31,18 @@ AppInfoHandler = function (_dbConn) {
 };
 
 /**
+ * Creates an access point for handling GeoTags.
+ *
+ * @param {DBConnection} Database connection
+ * @return {Object} handler object.
+ * @api public
+ */
+GeoTagHandler = function (_dbConn) {
+	this.db = _dbConn;
+};
+
+
+/**
  * Creates a collection object for the app usage.
  *
  * @param {function} callback function
@@ -59,6 +71,19 @@ AppInfoHandler.prototype.getCollection = function (callback) {
 };
 
 /**
+ * Creates a collection object for the app info collection.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for the object.
+ * @api public
+ */
+GeoTagHandler.prototype.getCollection = function (callback) {
+	this.db.collection(config.mongo.collection.geo_tags, function (error, appCollection) {
+		if (error) callback(error);
+		else callback(null, appCollection);
+	});
+};
+/**
  * fetches a collection of app usage.
  *
  * @param {function} callback function
@@ -76,6 +101,45 @@ AppUsageHandler.prototype.findAll = function (callback) {
 		}
 	});
 };
+
+/**
+ * fetches a collection of geotags.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for geotags.
+ * @api public
+ */
+GeoTagHandler.prototype.findAll = function (callback) {
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.find().toArray(function (error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+};
+
+/**
+ * Creates a new geoInfo [can be single or multiple]
+ *
+ * @param {GeoCollectionTag/Array} _appInfo
+ * @param {function} callback function
+ * @api public
+ */
+GeoTagHandler.prototype.addGeoTagInfo = function (geoInfo, callback) {
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.insert(geoInfo, function (error, result) {
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
 
 /**
  * Creates a new appInfo [can be single or multiple]
@@ -654,6 +718,29 @@ AppUsageHandler.prototype.tagAppDataForUser = function(_user_id, geohash, tag, c
 
 
 /**
+ * Updates the app information for all users.
+ *
+ * @param {String} geohash level 2
+ * @param {String} Tag information
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.tagAppDataForAll = function(geohash, tag, callback) {
+	this.getCollection(function(error, appCollection) {
+		if (error) callback(error)
+		else {
+			appCollection.update({
+				geohashZ2 : geohash
+			}, {$set :{"generic_loc_tag":[tag]}},{multi:true}, function(error, result) {
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+
+	});
+};
+
+/**
  * Fetches the data information for a particular user.
  *
  * @param {String} userId
@@ -683,5 +770,87 @@ AppUsageHandler.prototype.dataForUserLocTag = function(_user_id, tag, callback) 
 	
 };
 
+/**
+ * fetches a possible cluster of locations.
+ *
+ * @param {function} callback function
+ * @return {Collection} the entire collection for app usage.
+ * @api public
+ */
+AppUsageHandler.prototype.findPossibleLocationClusters = function (callback) {
+	var packagesToIgnore = config.ignore_packages;
+
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+
+
+			var map = function () {
+					emit(this.geohashZ2, {count:1,time:this.active_time,start_minute_day:this.start_minute_day})
+				};
+			var reduce = function (key, values) {
+			
+					var reducedVal = { count: 0, time: 0, start_minute_day:0 };
+
+                     for (var idx = 0; idx < values.length; idx++) {
+                         reducedVal.count += values[idx].count;
+                         reducedVal.time += values[idx].time;
+                         reducedVal.start_minute_day += values[idx].start_minute_day;
+                     }
+
+                     reducedVal.avg = reducedVal.start_minute_day/reducedVal.count;  
+                     return reducedVal;
+                     
+				
+					return Array.sum(values);
+				};
+			appcollection.mapReduce(map, reduce, {
+				out: {
+					inline: 1
+				},
+				query: {
+
+					package_name: {
+						$nin: packagesToIgnore
+					},
+					loc_tag: {$exists:false}
+
+				}
+			}, function (error, result) {
+				console.log('- %s', error);
+				if (error) callback(error)
+				else callback(null, result)
+			});
+		}
+	});
+};
+
+/**
+ * Fetches the data information for all the generic_loc_tag available data.
+ *
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.getAppDataForTaggedRecords = function(callback) {
+	
+	var packagesToIgnore = config.weka_ignore_packages;
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.find({
+				generic_loc_tag :  { $exists:true},
+				package_name: {
+					$nin: packagesToIgnore
+				}
+			}).toArray(function (error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+	
+};
+
 exports.AppInfoHandler = AppInfoHandler;
 exports.AppUsageHandler = AppUsageHandler;
+exports.GeoTagHandler = GeoTagHandler;
