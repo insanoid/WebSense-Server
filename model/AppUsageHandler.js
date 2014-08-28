@@ -741,7 +741,7 @@ AppUsageHandler.prototype.tagAppDataForAll = function(geohash, tag, callback) {
 };
 
 /**
- * Fetches the data information for a particular user.
+ * Fetches the data information for a particular user for a single tags.
  *
  * @param {String} userId
  * @param {String} Tag information
@@ -769,6 +769,38 @@ AppUsageHandler.prototype.dataForUserLocTag = function(_user_id, tag, callback) 
 	});
 	
 };
+
+
+/**
+ * Fetches the data information for a particular user for all personal tags.
+ *
+ * @param {String} userId
+ * @param {String} Tag information
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.dataForUserAllLocTags = function(_user_id, callback) {
+	
+	var packagesToIgnore = config.weka_ignore_packages;
+	var strObj = new String(_user_id);	
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.find({
+				user_id: ObjectID.createFromHexString(strObj),
+				loc_tag :  { $exists: true},
+				package_name: {
+					$nin: packagesToIgnore
+				}
+			}).toArray(function (error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+	
+};
+
 
 /**
  * fetches a possible cluster of locations.

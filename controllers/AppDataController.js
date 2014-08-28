@@ -448,7 +448,7 @@ exports.updateAppTagsForUserInRange = function (req, res) {
 }
 
 /**
- * API Call - Handle data for WEKA.
+ * API Call - Handle data for WEKA. (Tag for a user)
  *
  * @param {String} email_address
  * @api public
@@ -463,6 +463,32 @@ exports.getDataSetForTag = function (req, res) {
 
 			basicAssociateInfo(result, function (data) {
 				makeAFile(data.content, res, userId + "_" + tag, data.keys, data.package);
+			});
+		} else {
+
+			res.statusCode = 501;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
+}
+
+/**
+ * API Call - Handle data for WEKA. (all the personal tags for a user)
+ *
+ * @param {String} email_address
+ * @api public
+ */
+exports.getDataSetForAllTags = function (req, res) {
+
+	var userId = req.param('userId');
+
+	appCollection.dataForUserAllLocTags(userId, function (error_info, result) {
+		if (!error_info) {
+
+			basicAssociateInfo(result, function (data) {
+				makeAFile(data.content, res, userId + "_All", data.keys, data.package);
 			});
 		} else {
 
@@ -1002,7 +1028,7 @@ function foursquareAPIHandler(geohashVal, callback) {
 
 function makeAFile(data, res, uid, keys, PKGName) {
 
-	res.setHeader('Content-disposition', 'attachment; filename=data_' + uid + ".arff");
+	res.setHeader('Content-disposition', 'attachment; filename=DATA_' + uid + ".arff");
 	res.setHeader('Content-type', 'text/plain');
 	res.charset = 'UTF-8';
 	res.write("@relation APPUSAGE\n");
@@ -1016,7 +1042,7 @@ function makeAFile(data, res, uid, keys, PKGName) {
 	res.write(contentPK + "\n");
 
 	res.write("@attribute startMinuteDay numeric\n");
-	res.write("@attribute locationTag string\n");
+	res.write("@attribute locationTag {'O','H'}\n");
 	res.write("@attribute category ");
 
 	var content = "{";
@@ -1045,7 +1071,7 @@ function makeAFile(data, res, uid, keys, PKGName) {
 
 function makeAGenericFile(data, res, uid, keys, locationTag, PKGName) {
 
-	res.setHeader('Content-disposition', 'attachment; filename=data_' + uid + ".arff");
+	res.setHeader('Content-disposition', 'attachment; filename=DATA_' + uid + ".arff");
 	res.setHeader('Content-type', 'text/plain');
 	res.charset = 'UTF-8';
 	res.write("@relation APPUSAGE\n");

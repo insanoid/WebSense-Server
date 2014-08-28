@@ -93,7 +93,8 @@ app.get('/allcluster', appController.getAllClusters);
 app.get('/updateClustertags', appController.updateClusterTags);
 
 //get weka file.
-app.get('/weka/user', routes.wekatag); 
+app.get('/weka/user', routes.wekatag);
+app.get('/user/rawdata_tags', appController.getDataSetForAllTags); 
 app.get('/user/rawdata', appController.getDataSetForTag);
 app.get('/weka/all', appController.getDataSetForGenericTag);
 
