@@ -96,6 +96,8 @@ app.get('/updateClustertags', appController.updateClusterTags);
 app.get('/weka/user', routes.wekatag);
 app.get('/user/rawdata_tags', appController.getDataSetForAllTags); 
 app.get('/user/rawdata', appController.getDataSetForTag);
+app.get('/data/all/tagged_data', appController.getTaggedDataSetForAll);
+app.get('/data/all/apps', appController.getAllPossibleAppData);
 app.get('/weka/all', appController.getDataSetForGenericTag);
 
 app.get('/api/web/trends/time/localised/:duration/:start_time/:timespan/:lat/:lng/', appAPI.webDuringHoursAtLocation);

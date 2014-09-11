@@ -775,7 +775,6 @@ AppUsageHandler.prototype.dataForUserLocTag = function(_user_id, tag, callback) 
  * Fetches the data information for a particular user for all personal tags.
  *
  * @param {String} userId
- * @param {String} Tag information
  * @param {function} callback function
  * @api public
  */
@@ -789,6 +788,59 @@ AppUsageHandler.prototype.dataForUserAllLocTags = function(_user_id, callback) {
 			appcollection.find({
 				user_id: ObjectID.createFromHexString(strObj),
 				loc_tag :  { $exists: true},
+				package_name: {
+					$nin: packagesToIgnore
+				}
+			}).toArray(function (error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+	
+};
+
+/**
+ * Fetches the data information for a all for all personal tags.
+ *
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.dataForAllLocTags = function(callback) {
+	
+	var packagesToIgnore = config.weka_ignore_packages;
+
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.find({
+				loc_tag :  { $exists: true},
+				package_name: {
+					$nin: packagesToIgnore
+				}
+			}).toArray(function (error_correction, results) {
+				if (error_correction) callback(error_correction)
+				else callback(null, results)
+			});
+		}
+	});
+	
+};
+
+/**
+ * Fetches the data for all valid app records.
+ *
+ * @param {function} callback function
+ * @api public
+ */
+AppUsageHandler.prototype.dataForAppUsage = function(callback) {
+	
+	var packagesToIgnore = config.weka_ignore_packages;
+
+	this.getCollection(function (error, appcollection) {
+		if (error) callback(error)
+		else {
+			appcollection.find({
 				package_name: {
 					$nin: packagesToIgnore
 				}

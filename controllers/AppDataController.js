@@ -501,6 +501,53 @@ exports.getDataSetForAllTags = function (req, res) {
 }
 
 /**
+ * API Call - Handle data for WEKA. (all the personal tags for all)
+ *
+ * @api public
+ */
+exports.getTaggedDataSetForAll = function (req, res) {
+
+	appCollection.dataForAllLocTags(function (error_info, result) {
+
+		if (!error_info) {
+			basicAssociateInfo(result, function (data) {
+				makeAFile(data.content, res,  "Tagged_data_All", data.keys, data.package);
+			});
+		} else {
+
+			res.statusCode = 501;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
+}
+
+/**
+ * API Call - Handle data for WEKA. (all the app usage for all)
+ *
+ * @api public
+ */
+exports.getAllPossibleAppData = function (req, res) {
+
+	appCollection.dataForAppUsage(function (error_info, result) {
+		if (!error_info) {
+
+			basicAssociateInfo(result, function (data) {
+				makeAFile(data.content, res,  "All_App_Data", data.keys, data.package);
+			});
+		} else {
+
+			res.statusCode = 501;
+			return res.json({
+				error: "Invalid request."
+			});
+		}
+	});
+}
+
+
+/**
  * API Call - Handle data for WEKA. (All tags)
  * @api public
  */
@@ -821,7 +868,8 @@ function basicAssociateInfo(appList, callback) {
 		delete appList[n].end_time;
 		delete appList[n].user_id;
 		delete appList[n].app_name;
-		appList[n].loc_tag = appList[n].loc_tag[0];
+		if(appList[n].loc_tag!=undefined)
+			appList[n].loc_tag = appList[n].loc_tag[0];
 
 
 		appPackageName.push(appList[n].package_name);
